@@ -1,0 +1,52 @@
+<ul class="collapsible popout">
+    {{#each this}}
+    <li>
+        <div class="collapsible-header">
+            <span class="pkm-icon pkm-icon-{{safePkmName name}}"></span>{{name}}
+            <span class="badge">Usage Rank: #{{usageData.usage}}</span>
+            <span class="badge">Tier: {{pokemon.tier}}</span>
+            {{!-- <span class="badge">Gen: {{pokemon.generation}}</span>
+            <span class="badge">Another: {{name}}</span> --}}
+        </div>
+        <div class="collapsible-body">
+            <ul class="tabs tabs-fixed-width">
+                <li class="tab col s4"><a href="#usage-data-{{safePkmName name}}" class="active">Usage</a></li>
+                <li class="tab col s4"><a href="#sets-data-{{safePkmName name}}" class="waves-effect">Sets</a></li>
+                <li class="tab col s4"><a href="#extra-data-{{safePkmName name}}" class="waves-effect">Extra</a></li>
+            </ul>
+
+            <div id="usage-data-{{safePkmName name}}" class="row">
+                </br>
+                <div class="col s4 set-detail">
+                    <strong>Moves</strong>
+                    {{#limit usageData.moves limit="8"}}
+                        <div><div class="name">{{name}}: </div><strong class="value">{{perc percentage digits="1"}}%</strong></div>
+                    {{/limit}}
+                </div>
+                <div class="col s4 set-detail">
+                    <strong>Items</strong>
+                    {{#limit usageData.items limit="8"}}
+                        <div><span class="name">{{name}}: </span><strong class="value">{{perc percentage digits="1"}}%</strong></div>
+                    {{/limit}}
+                </div>
+                <div class="col s4 set-detail">
+                    <strong>Abilities</strong>
+                    {{#each usageData.abilities}}
+                        <div><span class="name">{{name}}: </span><strong class="value">{{perc percentage digits="1"}}%</strong></div>
+                    {{/each}}
+                </div>
+            </div>
+            <div id="sets-data-{{safePkmName name}}" class="row">
+                <div class="col s12">
+                    <span class="flow-text">Sets information is under development...</span>
+                </div>
+            </div>
+            <div id="extra-data-{{safePkmName name}}" class="row">
+                <div class="col s12">
+                    <span class="flow-text">Pokémon extra information is under development...</span>
+                </div>
+            </div>
+        </div>
+    </li>
+    {{/each}}
+</ul>
