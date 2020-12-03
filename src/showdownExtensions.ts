@@ -1,4 +1,4 @@
-import { AppMessage } from "./core/extensionModels";
+import { AppMessage, ResponseMessageFactory } from "./core/extensionModels";
 
 export class ShowdownExtensions {
   
@@ -25,10 +25,10 @@ export class ShowdownExtensions {
       console.log("Team:" + opponentTeamText);
 
       const opponentTeam = opponentTeamText.split("\n")[1]?.split("/")?.map(i => i.trim());
-      return opponentTeam;
+      return ResponseMessageFactory.createFor(opponentTeam);
     }
     
-    return undefined;
+    return ResponseMessageFactory.createForError("Couldn't find an active battle. Please open a battle tab in Pokemon Showdown first and try again.\n(Doesn't support random battles yet)");
   }
 
   public static executeOperation(operation: string): string | void {

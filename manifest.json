@@ -4,7 +4,6 @@
   "version": "1.0",
   "description": "Chrome Extension to help Pokemon Showdown players with Smogon usage statistics",
   "permissions": [
-    "activeTab",
     "declarativeContent"
   ],
   
