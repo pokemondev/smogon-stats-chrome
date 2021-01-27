@@ -33,7 +33,11 @@ module.exports = {
                 loader: 'handlebars-loader',
                 options: {
                     // Path to your custom js file, which has Handlebars with custom helpers registered
-                    runtime: path.resolve(__dirname, './src/handlebarsRuntime')
+                    //runtime: path.resolve(__dirname, './src/handlebarsRuntime'),
+                    helperDirs: [ 
+                        path.resolve(__dirname, './src/templates/helpers') 
+                    ],
+                    knownHelpers: [ 'safePkmName' ],
                 }
             }
         ]

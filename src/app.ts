@@ -12,7 +12,7 @@ jQuery(function() {
   
   // debugs
   //displayError("Couldn't find an active battle. Please open a battle tab in Pokemon Showdown first and try again.</br>(Doesn't support random battles yet)")
-  //displayTeamStats(["Gallade", "Swampert", "Noivern", "Tapu Lele", "Rillaboom", "Zoroark"]);
+  //displayTeamStats(["Moltres", "Swampert", "Clefable", "Tapu Lele", "Rillaboom", "Magearna"]);
   //displayTeamStats(["Blacephalon", "Urshifu-*", "Jirachi", "Sableye", "Togekiss", "Mamoswine"]);
 });
 
@@ -42,7 +42,8 @@ function getOpponentsTeam() {
 function displayTeamStats(team: string[]) {
   const pokemonDb = new PokemonDb();
   const smogonStats = new SmogonStats();
-  const teamUsageData = team.map(pkmName => ({
+  const teamUsageData = team.map(pkmName => pkmName.replace("-*", ""))
+                            .map(pkmName => ({
                               name: pkmName, 
                               pokemon: pokemonDb.getPokemon(pkmName), 
                               usageData: smogonStats.getMoveSet(pkmName) 
