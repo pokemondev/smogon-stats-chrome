@@ -1,0 +1,72 @@
+</br>
+<div class="col s6 set-detail">
+    <div class="card">
+        <div class="card-image">
+            <img style="display: inline!important;" class="pkm-image" src="{{pokemonImageUrl name}}">
+            <span class="card-title black-text">{{name}}</span>
+        </div>
+        <div class="card-content">
+            <p>Type: {{pokemon.type1}} {{#if pokemon.type1}} / {{pokemon.type2}} {{/if}}</p>
+            <p>Usage Rank: #{{usageData.usage}}</p>
+            <p>Tier: {{pokemon.tier}}</p>
+        </div>
+        <div class="card-action">
+            <a href="https://www.smogon.com/dex/ss/pokemon/{{safePkmName name}}/" target="_blank">See more on Smogon Dex</a>
+        </div>
+    </div>
+</div>
+
+<div class="col s6 set-detail">
+    <table class="PokemonStats">
+        <tbody>
+            <tr>
+                <th>HP:</th>
+                <td>{{pokemon.baseStats.hp}}</td>
+                <td>
+                    <div class="PokemonStats-bar"
+                        style="width:{{statsBarWidth pokemon.baseStats.hp}}%;background-color:{{statsBarColor pokemon.baseStats.hp}};" />
+                </td>
+            </tr>
+            <tr>
+                <th>Attack:</th>
+                <td>{{pokemon.baseStats.atk}}</td>
+                <td>
+                    <div class="PokemonStats-bar"
+                        style="width:{{statsBarWidth pokemon.baseStats.atk}}%;background-color:{{statsBarColor pokemon.baseStats.atk}};" />
+                </td>
+            </tr>
+            <tr>
+                <th>Defense:</th>
+                <td>{{pokemon.baseStats.def}}</td>
+                <td>
+                    <div class="PokemonStats-bar"
+                        style="width:{{statsBarWidth pokemon.baseStats.def}}%;background-color:{{statsBarColor pokemon.baseStats.def}};" />
+                </td>
+            </tr>
+            <tr>
+                <th>Sp. Atk:</th>
+                <td>{{pokemon.baseStats.spA}}</td>
+                <td>
+                    <div class="PokemonStats-bar"
+                        style="width:{{statsBarWidth pokemon.baseStats.spA}}%;background-color:{{statsBarColor pokemon.baseStats.spA}};" />
+                </td>
+            </tr>
+            <tr>
+                <th>Sp. Def:</th>
+                <td>{{pokemon.baseStats.spD}}</td>
+                <td>
+                    <div class="PokemonStats-bar"
+                        style="width:{{statsBarWidth pokemon.baseStats.spD}}%;background-color:{{statsBarColor pokemon.baseStats.spD}};" />
+                </td>
+            </tr>
+            <tr>
+                <th>Speed:</th>
+                <td>{{pokemon.baseStats.spe}}</td>
+                <td>
+                    <div class="PokemonStats-bar"
+                        style="width:{{statsBarWidth pokemon.baseStats.spe}}%;background-color:{{statsBarColor pokemon.baseStats.spe}};" />
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
