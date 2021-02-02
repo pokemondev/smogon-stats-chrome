@@ -1,7 +1,7 @@
 import { PokemonUsage, MoveSetUsage, SmogonFormat } from "./usageModels";
 import { FormatHelper } from "./formatHelper";
-import movesetGen8OU from '../../data/moveset-gen8ou.json'
-import usageGen8OU from '../../data/usage-gen8ou.json'
+import movesetGen8OU from '../../data/smogon-stats/gen8/ou/moveset-gen8ou.json'
+import usageGen8OU from '../../data/smogon-stats/gen8/ou/usage-gen8ou.json'
 
 export class SmogonStats {
 
