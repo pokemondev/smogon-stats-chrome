@@ -1,6 +1,6 @@
-import { SmogonFormat } from "./usageModels";
-//import { Pokemon } from "./pokemonModels";
-//import { PokemonSet, Evs } from "./setsModels";
+import { Pokemon } from "./pokemon/pokemonModels";
+import { PokemonSet } from "./smogon/setsModels";
+import { SmogonFormat } from "./smogon/usageModels";
 
 export class FormatHelper {
   public static Generations = [ 'gen8', 'gen7', 'gen6' ];
@@ -51,34 +51,34 @@ export class FormatHelper {
     return `Gen ${format.generation[format.generation.length-1]} ${format.tier.toUpperCase()}`;
   }
 
-  // public static getSmogonSet(pokemon: Pokemon, set: PokemonSet): string {
-  //   var evCounter = 0;
-  //   var pkmSetText = "";
-  //   pkmSetText = pokemon.name + (set.item ? " @ " + set.item : "") + "\n";
-  //   pkmSetText += set.nature + " Nature" + "\n";
-  //   pkmSetText += set.ability ? "Ability: " + set.ability + "\n" : "";
+  public static getSmogonSet(pokemon: Pokemon, set: PokemonSet): string {
+    var evCounter = 0;
+    var pkmSetText = "";
+    pkmSetText = pokemon.name + (set.item ? " @ " + set.item : "") + "\n";
+    pkmSetText += set.nature + " Nature" + "\n";
+    pkmSetText += set.ability ? "Ability: " + set.ability + "\n" : "";
     
-  //   pkmSetText += "EVs: ";
-  //   var evsArray = [];
-  //   for (var stat in set.evs) {
-  //     if (set.evs[stat]) {
-  //       evsArray.push(set.evs[stat] + " " + this.getDisplayStatName(stat));
-  //       evCounter += set.evs[stat];
-  //       if (evCounter > 510) break;
-  //     }
-  //   }
-  //   pkmSetText += evsArray.reduce((a,b) => `${a} / ${b}`); // serialize(evsArray, " / ");
-  //   pkmSetText += "\n";
+    pkmSetText += "EVs: ";
+    var evsArray = [];
+    for (var stat in set.evs) {
+      if (set.evs[stat]) {
+        evsArray.push(set.evs[stat] + " " + this.getDisplayStatName(stat));
+        evCounter += set.evs[stat];
+        if (evCounter > 510) break;
+      }
+    }
+    pkmSetText += evsArray.reduce((a,b) => `${a} / ${b}`); // serialize(evsArray, " / ");
+    pkmSetText += "\n";
     
-  //   for (var i = 0; i < 4; i++) {
-  //     var moveName = set.moves[i];
-  //     if (moveName !== "(No Move)") {
-  //       pkmSetText += "- " + moveName + "\n";
-  //     }
-  //   }
-  //   pkmSetText = pkmSetText.trim();
-  //   return pkmSetText;
-  // }
+    for (var i = 0; i < 4; i++) {
+      var moveName = set.moves[i];
+      if (moveName !== "(No Move)") {
+        pkmSetText += "- " + moveName + "\n";
+      }
+    }
+    pkmSetText = pkmSetText.trim();
+    return pkmSetText;
+  }
 
   // helpers
   
