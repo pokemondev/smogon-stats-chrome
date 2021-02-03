@@ -1,20 +1,20 @@
 {
   "manifest_version": 2,
   "name": "Smogon Stats",
-  "version": "1.0",
-  "description": "Chrome Extension to help Pokemon Showdown players with Smogon usage statistics",
+  "version": "1.1",
+  "description": "Chrome Extension that helps Pokemon Showdown players using Smogon usage data statistics",
   "permissions": [
     
   ],
   
   "browser_action": {
-    "default_popup": "src/popup.html",
+    "default_popup": "build/popup.html",
     "default_icon": {
-      "16": "src/img/logo16.png",
-      "32": "src/img/logo32.png",
-      "48": "src/img/logo48.png",
-      "64": "src/img/logo64.png",
-      "128": "src/img/logo128.png"
+      "16": "build/img/logo16.png",
+      "32": "build/img/logo32.png",
+      "48": "build/img/logo48.png",
+      "64": "build/img/logo64.png",
+      "128": "build/img/logo128.png"
     }
   },
   
@@ -25,7 +25,7 @@
       ],
       "js": [
         "build/showdownExtensions.js",
-        "src/js/jquery-3.5.1.min.js"
+        "build/js/jquery-3.5.1.min.js"
       ]
     }
   ],
@@ -38,10 +38,10 @@
   },
   
   "icons": {
-    "16": "src/img/logo16.png",
-    "32": "src/img/logo32.png",
-    "48": "src/img/logo48.png",
-    "64": "src/img/logo64.png",
-    "128": "src/img/logo128.png"
+    "16": "build/img/logo16.png",
+    "32": "build/img/logo32.png",
+    "48": "build/img/logo48.png",
+    "64": "build/img/logo64.png",
+    "128": "build/img/logo128.png"
   }
 }
