@@ -10,6 +10,7 @@
   "author": "pokemondev",
   "license": "ISC",
   "devDependencies": {
+    "copy-webpack-plugin": "^7.0.0",
     "glob": "^7.1.6",
     "handlebars": "^4.7.6",
     "handlebars-loader": "^1.7.1",
@@ -22,6 +23,7 @@
     "@types/chrome": "0.0.126",
     "@types/jquery": "^3.5.4",
     "@types/materialize-css": "^1.0.8",
+    "axios": "^0.21.1",
     "fuzzy-matching": "^0.4.3",
     "jquery": "^3.5.1"
   }

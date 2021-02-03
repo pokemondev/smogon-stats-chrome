@@ -1,5 +1,6 @@
 const path = require('path');
 const glob = require("glob");
+const CopyPlugin = require("copy-webpack-plugin");
 const webpack = require("webpack");
 
 module.exports = {
@@ -11,7 +12,7 @@ module.exports = {
         },
         background: path.resolve(__dirname, 'src', 'background.ts'),
         showdownExtensions: path.resolve(__dirname, 'src', 'showdownExtensions.ts'),
-        core: glob.sync("./src/core/*.ts") 
+        core: glob.sync("./src/core/*.ts")
         // helpers: [
         //   path.resolve(__dirname, 'src', 'models.ts'),
         //   //path.resolve(__dirname, 'src', 'background.ts'),
@@ -59,6 +60,14 @@ module.exports = {
     // },
     plugins: [
         new webpack.ProgressPlugin(),
+        new CopyPlugin({
+            patterns: [
+                { from: "./src/css", to: "css" },
+                { from: "./src/img", to: "img" },
+                { from: "./src/js", to: "js" },
+                { from: "./src/popup.html", to: "popup.html" },
+            ],
+        }),
 
     //   new webpack.ProvidePlugin({
     //     $: "jquery",

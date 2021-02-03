@@ -1,6 +1,6 @@
 import FuzzyMatching = require('fuzzy-matching');
 import { Pokemon } from "./pokemonModels";
-import database from '../../data/pokemon-db.json'
+import database from '../../../data/pokemon-db.json'
 
 export class PokemonDb {
 

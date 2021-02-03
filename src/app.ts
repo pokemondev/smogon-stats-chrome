@@ -1,8 +1,10 @@
-import { PokemonDb } from "./core/pokemonDb";
-import { SmogonStats } from "./core/smogonStats";
+import { PokemonDb } from "./core/pokemon/pokemonDb";
+import { SmogonStats } from "./core/smogon/smogonStats";
 import pokemonListTemplate from './templates/pokemonItem.hbs';
 import userMessageTemplate from './templates/message.hbs';
 import { ResponseMessage } from "./core/extensionModels";
+import { SmogonSets } from "./core/smogon/smogonSets";
+import { FormatHelper } from "./core/formatHelper";
 
 let communicationDone = false;
 
@@ -12,6 +14,7 @@ jQuery(function() {
   
   // debugs
   //displayError("Couldn't find an active battle. Please open a battle tab in Pokemon Showdown first and try again.</br>(Doesn't support random battles yet)")
+  //displayTeamStats(["Slowbro", "Cinderace", "Dragapult", "Dragonite", "Zapdos", "Nidoking"]);
   //displayTeamStats(["Moltres", "Swampert", "Clefable", "Tapu Lele", "Rillaboom", "Magearna"]);
   //displayTeamStats(["Blacephalon", "Urshifu-*", "Jirachi", "Sableye", "Togekiss", "Mamoswine"]);
 });
@@ -39,14 +42,19 @@ function getOpponentsTeam() {
   });
 }
 
-function displayTeamStats(team: string[]) {
+async function displayTeamStats(team: string[]) {
   const pokemonDb = new PokemonDb();
   const smogonStats = new SmogonStats();
+  await SmogonSets.initialize();
+
   const teamUsageData = team.map(pkmName => pkmName.replace("-*", ""))
-                            .map(pkmName => ({
-                              name: pkmName, 
-                              pokemon: pokemonDb.getPokemon(pkmName), 
-                              usageData: smogonStats.getMoveSet(pkmName) 
+                            .map(pkmName => pokemonDb.getPokemon(pkmName))
+                            .map(pkm => ({
+                              name: pkm.name, 
+                              pokemon: pkm, 
+                              usageData: smogonStats.getMoveSet(pkm.name),
+                              sets: SmogonSets.get(pkm, FormatHelper.getDefault())
+                                              .map(set => ({name: set.name, set: FormatHelper.getSmogonSet(pkm, set)}))
                             }));
   console.log(teamUsageData);
   
