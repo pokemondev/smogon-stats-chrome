@@ -5,7 +5,6 @@ module.exports = function (context) {
   }
   
   function colorToHex(color) {
-    console.log(color);
     return "#" + componentToHex(color.r) + componentToHex(color.g) + componentToHex(color.b);
   }
 
