@@ -56,9 +56,12 @@
                 </div>
             </div>
             <div id="sets-data-{{safePkmName name}}" class="row">
-                <div class="col s12">
-                    <span class="flow-text">Sets information is under development...</span>
+                {{#limit sets limit="6"}}
+                <div class="col s6 set-detail left-align" style="white-space: pre-line">
+                    <strong>{{name}}</strong>
+                    {{set}}
                 </div>
+                {{/limit}}
             </div>
             <div id="extra-data-{{safePkmName name}}" class="row">
                 {{> pkmExtraData}} 
