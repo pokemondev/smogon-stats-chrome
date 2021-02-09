@@ -14,10 +14,9 @@ module.exports = {
         showdownExtensions: path.resolve(__dirname, 'src', 'showdownExtensions.ts'),
         core: {
             import: glob.sync("./src/core/**/*.ts"),
-            dependOn: 'sets'
+            dependOn: 'data'
         },
-
-        sets: path.resolve(__dirname, 'data/smogon-sets/gen8-sets.json'),
+        data: glob.sync('./data/**/*.json'),
     },
     output: {
         path: path.resolve(__dirname, 'build'),
