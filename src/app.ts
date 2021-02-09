@@ -10,11 +10,11 @@ let communicationDone = false;
 
 // initializes the app
 jQuery(function() {
-  getOpponentsTeam();
+  //getOpponentsTeam();
   
   // debugs
   //displayError("Couldn't find an active battle. Please open a battle tab in Pokemon Showdown first and try again.</br>(Doesn't support random battles yet)")
-  //displayTeamStats(["Slowbro", "Cinderace", "Dragapult", "Dragonite", "Zapdos", "Nidoking"]);
+  displayTeamStats(["Slowbro", "Cinderace", "Dragapult", "Dragonite", "Zapdos", "Nidoking"]);
   //displayTeamStats(["Moltres", "Swampert", "Clefable", "Tapu Lele", "Rillaboom", "Magearna"]);
   //displayTeamStats(["Blacephalon", "Urshifu-*", "Jirachi", "Sableye", "Togekiss", "Mamoswine"]);
 });
