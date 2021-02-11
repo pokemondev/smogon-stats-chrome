@@ -2,7 +2,7 @@ import { PokemonDb } from "./core/pokemon/pokemonDb";
 import { SmogonStats } from "./core/smogon/smogonStats";
 import pokemonListTemplate from './templates/pokemonItem.hbs';
 import userMessageTemplate from './templates/message.hbs';
-import { ResponseMessage } from "./core/extensionModels";
+import { BattleInfo, ResponseMessage } from "./core/extensionModels";
 import { SmogonSets } from "./core/smogon/smogonSets";
 import { FormatHelper } from "./core/formatHelper";
 
@@ -14,7 +14,8 @@ jQuery(function() {
   
   // debugs
   //displayError("Couldn't find an active battle. Please open a battle tab in Pokemon Showdown first and try again.</br>(Doesn't support random battles yet)")
-  displayTeamStats(["Slowbro", "Cinderace", "Dragapult", "Dragonite", "Zapdos", "Nidoking"]);
+  //displayTeamStats(new BattleInfo("gen8ou", ["Slowbro", "Cinderace", "Dragapult", "Dragonite", "Zapdos", "Nidoking"]));
+  displayTeamStats(new BattleInfo("gen8uu", ["Sylveon", "Scizor", "Zeraora", "Salamence", "Victini", "Latias"]));
   //displayTeamStats(["Moltres", "Swampert", "Clefable", "Tapu Lele", "Rillaboom", "Magearna"]);
   //displayTeamStats(["Blacephalon", "Urshifu-*", "Jirachi", "Sableye", "Togekiss", "Mamoswine"]);
 });
@@ -24,16 +25,16 @@ function getOpponentsTeam() {
 
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     chrome.tabs.sendMessage(tabs[0].id, { operation: "getOpponentsTeam", test: "dfsdf" },
-      function (response: ResponseMessage<string[]>) {
+      function (response: ResponseMessage<BattleInfo>) {
         if (response.success) {
-          const team = response.data;
-          const anyMonInTheTeam = team && team.length > 0; 
+          const battleInfo = response.data;
+          const anyMonInTheTeam = battleInfo && battleInfo.isValidTeam(); 
           if (!anyMonInTheTeam) {
             displayError("It wasn't possible to load the team. Please refresh the Pokemon Showdown page and try again.")
             return;
           }
 
-          displayTeamStats(team);
+          displayTeamStats(battleInfo);
         } 
         else {
           displayError(response.errorMessage);
@@ -42,18 +43,22 @@ function getOpponentsTeam() {
   });
 }
 
-async function displayTeamStats(team: string[]) {
+async function displayTeamStats(battleInfo: BattleInfo) {
   const pokemonDb = new PokemonDb();
   const smogonStats = new SmogonStats();
   await SmogonSets.initialize();
+
+  const team = battleInfo.opponentTeam;
+  const format = FormatHelper.getFormatFromKey(battleInfo.format);
+  const teamMoveset = await Promise.all(team.map(async pkmName => await smogonStats.getMoveSet(pkmName, format)));
 
   const teamUsageData = team.map(pkmName => pkmName.replace("-*", ""))
                             .map(pkmName => pokemonDb.getPokemon(pkmName))
                             .map(pkm => ({
                               name: pkm.name, 
                               pokemon: pkm, 
-                              usageData: smogonStats.getMoveSet(pkm.name),
-                              sets: SmogonSets.get(pkm, FormatHelper.getDefault())
+                              usageData: teamMoveset.find(i => i.name.toLowerCase() == pkm.name.toLocaleLowerCase()),
+                              sets: SmogonSets.get(pkm, format)
                                               .map(set => ({name: set.name, set: FormatHelper.getSmogonSet(pkm, set)}))
                             }));
   console.log(teamUsageData);
