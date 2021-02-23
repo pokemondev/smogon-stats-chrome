@@ -9,6 +9,15 @@ export interface ResponseMessage<T> {
   errorMessage?: string
 }
 
+export class BattleInfo {
+  constructor(public format: string, public opponentTeam: string[]) {
+  }
+
+  public isValidTeam(): boolean {
+    return this.opponentTeam && this.opponentTeam.length > 0;
+  }
+}
+
 export class ResponseMessageFactory {
   public static createFor<T>(data: T) {
     return { data: data, success: true } as ResponseMessage<T>;

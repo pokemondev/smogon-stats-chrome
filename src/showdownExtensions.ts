@@ -1,4 +1,4 @@
-import { AppMessage, ResponseMessageFactory } from "./core/extensionModels";
+import { AppMessage, BattleInfo, ResponseMessageFactory } from "./core/extensionModels";
 
 export class ShowdownExtensions {
   
@@ -24,8 +24,9 @@ export class ShowdownExtensions {
       const opponentTeamText = battleTeams.toArray().find(t => t.innerText.includes(opponentName)).innerText;
       console.log("Team:" + opponentTeamText);
 
+      const format = currentBattleRoomId.split("-")[1];
       const opponentTeam = opponentTeamText.split("\n")[1]?.split("/")?.map(i => i.trim());
-      return ResponseMessageFactory.createFor(opponentTeam);
+      return ResponseMessageFactory.createFor(new BattleInfo(format, opponentTeam));
     }
     
     return ResponseMessageFactory.createForError("Couldn't find an active battle. Please open a battle tab in Pokemon Showdown first and try again.\n(Doesn't support random battles yet)");

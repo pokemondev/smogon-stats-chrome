@@ -3,7 +3,7 @@
     <li>
         <div class="collapsible-header">
             <span class="pkm-icon pkm-icon-{{safePkmName name}}"></span>{{name}}
-            <span class="badge">Usage Rank: #{{usageData.usage}}</span>
+            <span class="badge">{{uppercase format.tier}} usage rank: #{{usageData.usage}}</span>
             <span class="badge">Tier: {{pokemon.tier}}</span>
             {{!-- <span class="badge">Gen: {{pokemon.generation}}</span>
             <span class="badge">Another: {{name}}</span> --}}
@@ -56,12 +56,17 @@
                 </div>
             </div>
             <div id="sets-data-{{safePkmName name}}" class="row">
-                {{#limit sets limit="6"}}
-                <div class="col s6 set-detail left-align" style="white-space: pre-line">
-                    <strong>{{name}}</strong>
-                    {{set}}
-                </div>
-                {{/limit}}
+                {{#if sets}} 
+                    {{#limit sets limit="6"}}
+                    <div class="col s6 set-detail left-align" style="white-space: pre-line">
+                        <strong>{{name}}</strong>
+                        {{set}}
+                    </div>
+                    {{/limit}}
+                {{else}} 
+                    </br>
+                    <div>No sets found for {{pokemon.name}} in {{format.generation}}{{format.tier}}</div>
+                {{/if}}
             </div>
             <div id="extra-data-{{safePkmName name}}" class="row">
                 {{> pkmExtraData}} 

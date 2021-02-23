@@ -4,7 +4,7 @@ const CopyPlugin = require("copy-webpack-plugin");
 const webpack = require("webpack");
 
 module.exports = {
-  //devtool: 'inline-sourcemap',
+    //devtool: 'inline-sourcemap',
     entry: {
         app: {
             import: path.resolve(__dirname, 'src', 'app.ts'),
@@ -12,11 +12,11 @@ module.exports = {
         },
         background: path.resolve(__dirname, 'src', 'background.ts'),
         showdownExtensions: path.resolve(__dirname, 'src', 'showdownExtensions.ts'),
-        core: glob.sync("./src/core/*.ts")
-        // helpers: [
-        //   path.resolve(__dirname, 'src', 'models.ts'),
-        //   //path.resolve(__dirname, 'src', 'background.ts'),
-        // ],
+        core: {
+            import: glob.sync("./src/core/**/*.ts"),
+            dependOn: 'data'
+        },
+        data: glob.sync('./data/**/*.json'),
     },
     output: {
         path: path.resolve(__dirname, 'build'),
@@ -29,16 +29,14 @@ module.exports = {
                 exclude: /node_modules/,
                 loader: 'ts-loader'
             },
-            { 
-                test: /\.hbs$/, 
+            {
+                test: /\.hbs$/,
                 loader: 'handlebars-loader',
                 options: {
-                    // Path to your custom js file, which has Handlebars with custom helpers registered
-                    //runtime: path.resolve(__dirname, './src/handlebarsRuntime'),
-                    helperDirs: [ 
-                        path.resolve(__dirname, './src/templates/helpers') 
+                    helperDirs: [
+                        path.resolve(__dirname, './src/templates/helpers')
                     ],
-                    knownHelpers: [ 'safePkmName' ],
+                    knownHelpers: ['safePkmName'],
                 }
             }
         ]
@@ -51,13 +49,8 @@ module.exports = {
         extensions: ['.js', '.ts'],
         alias: {
             handlebars: 'handlebars/dist/handlebars.min.js',
-            //jquery: "jquery/src/jquery"
-
-         }
+        }
     },
-    // optimization: {
-    //     mergeDuplicateChunks: false,
-    // },
     plugins: [
         new webpack.ProgressPlugin(),
         new CopyPlugin({
@@ -68,10 +61,5 @@ module.exports = {
                 { from: "./src/popup.html", to: "popup.html" },
             ],
         }),
-
-    //   new webpack.ProvidePlugin({
-    //     $: "jquery",
-    //     jQuery: "jquery"
-    //   })
     ]
 }

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Smogon Stats",
-  "version": "1.1",
+  "version": "1.2.1",
   "description": "Chrome Extension that helps Pokemon Showdown players using Smogon usage data statistics",
   "permissions": [
     
@@ -21,7 +21,8 @@
   "content_scripts": [
     {
       "matches": [
-        "*://play.pokemonshowdown.com/*"
+        "*://play.pokemonshowdown.com/*",
+        "*://*.psim.us/*"
       ],
       "js": [
         "build/showdownExtensions.js",
