@@ -10,11 +10,12 @@ let communicationDone = false;
 
 // initializes the app
 jQuery(function() {
-  //getOpponentsTeam();
+  getOpponentsTeam();
   
   // debugs
   //displayError("Couldn't find an active battle. Please open a battle tab in Pokemon Showdown first and try again.</br>(Doesn't support random battles yet)")
-  displayTeamStats(new BattleInfo("gen8vgc2021", ["Groudon", "Charizard", "Venusaur", "Regieleki", "Porygon2", "Incineroar"]));
+  //displayTeamStats(new BattleInfo("gen8vgc2021", ["Groudon", "Charizard", "Venusaur", "Regieleki", "Porygon2", "Incineroar"]));
+  //displayTeamStats(new BattleInfo("gen8vgc2021", ["Ninetales-Alola", "Arctozolt", "Tyranitar", "Zapdos-Galar", "Indeedee-F", "Beartic"]));
   //displayTeamStats(new BattleInfo("gen8ou", ["Slowbro", "Cinderace", "Dragapult", "Dragonite", "Zapdos", "Nidoking"]));
   //displayTeamStats(["Moltres", "Swampert", "Clefable", "Tapu Lele", "Rillaboom", "Magearna"]);
   //displayTeamStats(["Blacephalon", "Urshifu-*", "Jirachi", "Sableye", "Togekiss", "Mamoswine"]);
@@ -25,10 +26,10 @@ function getOpponentsTeam() {
   setTimeout(checkShowdownTabAnswer, 3000); // shows error message after 3 seconds
 
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    chrome.tabs.sendMessage(tabs[0].id, { operation: "getOpponentsTeam", test: "dfsdf" },
+    chrome.tabs.sendMessage(tabs[0].id, { operation: "getOpponentsTeam" },
       function (response: ResponseMessage<BattleInfo>) {
         if (response.success) {
-          const battleInfo = response.data;
+          const battleInfo = new BattleInfo(response.data.format, response.data.opponentTeam);
           const anyMonInTheTeam = battleInfo && battleInfo.isValidTeam(); 
           if (!anyMonInTheTeam) {
             displayError("It wasn't possible to load the team. Please refresh the Pokemon Showdown page and try again.")
