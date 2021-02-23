@@ -3,7 +3,7 @@
 export class FileHelper {
   public static async loadFileData<T>(filename: string): Promise<T> {
     //const data:T = await axios.get(`../data/${filename}`);
-    const data:T = await import(`../../../data/${filename}`);
+    const data:T = (await import(`../../../data/${filename}`)).default;
     return data;
   }
 

@@ -9,7 +9,7 @@ export class FormatHelper {
     { gen: 'gen8', year: '2021'},
     { gen: 'gen8', year: '2020'},
     { gen: 'gen7', year: '2019'},
-   ];
+  ];
   
   public static getFormat(args: string[]): SmogonFormat {
     let gen  = args.find(a => this.Generations.some(g => g == a.toLowerCase()));
@@ -31,12 +31,26 @@ export class FormatHelper {
     };
   }
 
+  public static getFormatFromKey(format: string): SmogonFormat {
+    const defaultFormat = this.getDefault();
+    const tier = this.Tiers.filter(t => format.includes(t))[0] || defaultFormat.tier;
+    const gen = this.Generations.filter(g => format.includes(g))[0] || defaultFormat.generation;
+
+    return this.getFormat( [ tier, gen ] );
+  }
+
   public static isValidGen(gen: string): boolean {
     return this.Generations.some(g => g == gen.toLowerCase());
   }
 
   public static isValidTier(tier: string): boolean {
     return this.Tiers.some(t => t == tier.toLowerCase());
+  }
+
+  public static isValidFormat(format: string): boolean {
+    const validTier = this.Tiers.some(t => format.includes(t));
+    const validGen = this.Generations.some(g => format.includes(g));
+    return validTier && validGen;
   }
 
   public static getDefault(): SmogonFormat {
