@@ -2,7 +2,7 @@
     {{#each this}}
     <li>
         <div class="collapsible-header">
-            <span class="pkm-icon pkm-icon-{{safePkmName name}}"></span>{{name}}
+            <span class="pkm-sprite sprite-{{safePkmName name}}" aria-hidden="true"></span>{{name}}
             <span class="badge">{{uppercase format.tier}} usage rank: #{{usageData.usage}}</span>
             <span class="badge">Tier: {{pokemon.tier}}</span>
             {{!-- <span class="badge">Gen: {{pokemon.generation}}</span>

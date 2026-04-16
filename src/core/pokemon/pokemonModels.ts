@@ -11,12 +11,13 @@ export interface BaseStats {
 export interface Pokemon {
     name: string;
     type1: PokemonType;
-    type2: PokemonType;
+    type2: PokemonType | null;
     baseStats: BaseStats;
     tier: string;
     possiblesAbilities: string[];
     evolutions: string[];
     generation: string;
+    isAltForm?: boolean;
     weight: number;
     height: number;
     usage?: any;

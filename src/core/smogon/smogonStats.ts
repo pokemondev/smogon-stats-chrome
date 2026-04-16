@@ -4,7 +4,7 @@ import { FileHelper } from "../common/fileHelper";
 
 export class SmogonStats {
 
-  private usages: Map<string, PokemonUsage>;
+  private usages: Map<string, Map<string, PokemonUsage>> = new Map;
   private database: Map<string, any> = new Map;
 
   public async getMoveSets(format: SmogonFormat, filter: (pkm: MoveSetUsage) => boolean = undefined): Promise<MoveSetUsage[]> {
@@ -23,16 +23,26 @@ export class SmogonStats {
   }
 
   public async getUsages(format: SmogonFormat = undefined): Promise<Map<string, PokemonUsage>> {
-    if (!this.usages) {
+    format = format || FormatHelper.getDefault();
+    const formatKey = FormatHelper.getKeyFrom(format);
+
+    if (!this.usages.has(formatKey)) {
       //[1,"Zygarde",24.764,369434,15.561,288085,15.522]
       const usageData = await this.getUsageData(format);
       
-      this.usages = new Map;
+      const usages = new Map<string, PokemonUsage>();
       for (const mon of usageData.data.rows) {
-        this.usages.set(mon[1].toString(), { name: mon[1], rank: mon[0], usageRaw: mon[2] } as PokemonUsage);
+        usages.set(mon[1].toString(), {
+          name: mon[1],
+          rank: mon[0],
+          usagePercentage: mon[2],
+          usageRaw: mon[3]
+        } as PokemonUsage);
       }
+
+      this.usages.set(formatKey, usages);
     }
-    return this.usages;
+    return this.usages.get(formatKey);
   }
 
   public async getUsage(pokemon: string, format: SmogonFormat = undefined): Promise<PokemonUsage> {

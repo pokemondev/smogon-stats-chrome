@@ -1,7 +1,28 @@
+const fs = require('fs');
 const path = require('path');
 const glob = require("glob");
 const CopyPlugin = require("copy-webpack-plugin");
 const webpack = require("webpack");
+
+class RemoveStaleBuildFilesPlugin {
+    constructor(files) {
+        this.files = files;
+    }
+
+    apply(compiler) {
+        const removeFiles = () => {
+            for (const file of this.files) {
+                const filePath = path.resolve(compiler.options.output.path, file);
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
+            }
+        };
+
+        compiler.hooks.beforeRun.tap('RemoveStaleBuildFilesPlugin', removeFiles);
+        compiler.hooks.watchRun.tap('RemoveStaleBuildFilesPlugin', removeFiles);
+    }
+}
 
 module.exports = {
     //devtool: 'inline-sourcemap',
@@ -10,7 +31,6 @@ module.exports = {
             import: path.resolve(__dirname, 'src', 'app.ts'),
             dependOn: 'core'
         },
-        background: path.resolve(__dirname, 'src', 'background.ts'),
         showdownExtensions: path.resolve(__dirname, 'src', 'showdownExtensions.ts'),
         core: {
             import: glob.sync("./src/core/**/*.ts"),
@@ -52,12 +72,18 @@ module.exports = {
         }
     },
     plugins: [
+        new RemoveStaleBuildFilesPlugin(['background.js']),
         new webpack.ProgressPlugin(),
         new CopyPlugin({
             patterns: [
                 { from: "./src/css", to: "css" },
                 { from: "./src/img", to: "img" },
-                { from: "./src/js", to: "js" },
+                { from: "./node_modules/materialize-css/dist/css/materialize.min.css", to: "css/materialize.min.css" },
+                {
+                    from: "./node_modules/materialize-css/dist/js/materialize.min.js",
+                    to: "js/materialize.min.js",
+                    info: { minimized: true }
+                },
                 { from: "./src/popup.html", to: "popup.html" },
             ],
         }),

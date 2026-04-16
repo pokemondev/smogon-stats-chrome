@@ -1,14 +1,16 @@
 import { SmogonFormat } from "./usageModels";
 
 export interface PokemonSet {
-  name: string
-  level: number
-  ability: string
-  item: string
-  nature: string
-  evs: Evs
+  name?: string
+  level?: number
+  ability?: string
+  item?: string
+  nature?: string
+  evs?: Evs
+  ivs?: Evs
   moves: string[]
-  format: SmogonFormat
+  teraType?: string
+  format?: SmogonFormat
 }
 
 export interface Evs {

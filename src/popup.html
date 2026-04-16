@@ -3,10 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen,projection" />
     <link type="text/css" rel="stylesheet" href="css/style.css" media="screen,projection" />
-    <link type="text/css" rel="stylesheet" href="css/pkm.css" media="screen,projection" />
+    <link type="text/css" rel="stylesheet" href="css/sprites.css" media="screen,projection" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chrome Extension</title>
 </head>
@@ -16,14 +15,14 @@
         <nav class="deep-purple lighten-1">
             <div class="nav-wrapper">
                 <div>
-                    <a href="https://discord.com/invite/BM7ZRNB" target="_blank" class="brand-logo left logo">
-                        <img src="https://cdn.discordapp.com/avatars/610945850557988894/2680da85a519a5d856e7a90cc449ef4e.png?size=64" />
+                    <a href="https://discord.com/invite/BM7ZRNB" target="_blank" rel="noreferrer" class="brand-logo left logo">
+                        <img src="img/logo64.png" alt="Smogon Stats logo" />
                         <span>Smogon Stats</span>
                     </a>
                 </div>
                 <ul id="nav-mobile" class="right">
-                    <li><a href="https://discord.com/invite/BM7ZRNB" target="_blank">Discord</a></li>
-                    <li><a href="https://www.smogon.com/dex/ss/pokemon/" target="_blank">Smogon Dex</a></li>
+                    <li><a href="https://discord.com/invite/BM7ZRNB" target="_blank" rel="noreferrer">Discord</a></li>
+                    <li><a href="https://www.smogon.com/dex/ss/pokemon/" target="_blank" rel="noreferrer">Smogon Dex</a></li>
                 </ul>
             </div>
         </nav>
@@ -31,8 +30,8 @@
     <main>
         <div class="main-list">
             <!-- loading... it's replaced on app startup-->
-            </br>
-            </br>
+            <br />
+            <br />
             <div class="preloader-wrapper active">
                 <div class="spinner-layer spinner-blue-only">
                     <div class="circle-clipper left">
@@ -48,17 +47,16 @@
             </div>
         </div>
     </main>
-    <footer class="page-footer deep-purple lighten-1" style="padding-top: 0px;">
+    <footer class="page-footer deep-purple lighten-1 app-footer">
         <div class="footer-copyright">
             <div class="container">
-                <img src="https://avatars.githubusercontent.com/u/53821109?s=24" class="circle left" />
-                Created by <a class="grey-text text-lighten-4" href="https://github.com/pokemondev" target="_blank">PokemonDev</a> © 2020 Copyright
-                <a class="grey-text text-lighten-4 right" href="https://github.com/pokemondev">See more on Github</a>    
+                <img src="https://avatars.githubusercontent.com/u/53821109?s=24" class="circle left footer-logo" alt="Pokedev" />
+                Created by <a class="grey-text text-lighten-4" href="https://github.com/pokemondev" target="_blank" rel="noreferrer">PokemonDev</a> © 2026 Copyright
+                <a class="grey-text text-lighten-4 right" href="https://github.com/pokemondev" target="_blank" rel="noreferrer">See more on Github</a>    
             </div>
         </div>
     </footer>
 
-    <script type="text/javascript" src="js/jquery-3.5.1.min.js"></script>
     <script type="text/javascript" src="js/materialize.min.js"></script>
     <script type="text/javascript" src="../build/data.js"></script>
     <script type="text/javascript" src="../build/core.js"></script>
