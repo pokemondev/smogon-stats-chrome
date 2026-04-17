@@ -1,60 +1,126 @@
 import { Pokemon } from "./pokemon/pokemonModels";
-import { PokemonSet } from "./smogon/setsModels";
+import { Evs, PokemonSet } from "./smogon/setsModels";
 import { SmogonFormat } from "./smogon/usageModels";
 
 export class FormatHelper {
-  public static Generations = [ 'gen8', 'gen7', 'gen6' ];
-  public static Tiers = [ 'ubers', 'uber', 'ou', 'uu', 'ru', 'nu', 'vgc', 'vgc2021', 'vgc2020', 'vgc2019' ];
-  public static VgcSeasons = [
-    { gen: 'gen8', year: '2021'},
-    { gen: 'gen8', year: '2020'},
-    { gen: 'gen7', year: '2019'},
+  private static readonly SupportedFormats: SmogonFormat[] = [
+    { generation: "gen9", tier: "championsvgc2026regma" },
+    { generation: "gen9", tier: "vgc2026regf" },
+    { generation: "gen9", tier: "vgc2026regi" },
+    { generation: "gen9", tier: "ubers" },
+    { generation: "gen9", tier: "ou" },
+    { generation: "gen9", tier: "uu" },
+    { generation: "gen9", tier: "ru" },
+    { generation: "gen8", tier: "ou" },
+    { generation: "gen8", tier: "uu" },
+    { generation: "gen8", tier: "vgc2021" },
+    { generation: "gen9", tier: "nu" },
   ];
+  private static readonly VgcRegulations: { [id: string]: string } = {
+    regma: "championsvgc2026regma",
+    regf: "vgc2026regf",
+    regi: "vgc2026regi"
+  };
+  private static readonly LegacyVgcAliases: { [id: string]: string } = {
+    "2021": "vgc2021"
+  };
+  public static Generations = FormatHelper.getDistinctGenerations();
+  public static Tiers = FormatHelper.getDistinctTiers();
   
   public static getFormat(args: string[]): SmogonFormat {
-    let gen  = args.find(a => this.Generations.some(g => g == a.toLowerCase()));
-    let tier = args.find(a => this.Tiers.some(t => t == a.toLowerCase()));
+    const normalizedArgs = args
+      .filter(arg => !!arg)
+      .map(arg => arg.toLowerCase());
 
-    if (this.isVgc(tier)) {
-      ({ tier, gen } = this.ensureValidVgc(tier, gen));
+    const supportedKey = normalizedArgs.find(arg => this.isValidFormat(arg));
+    if (supportedKey) {
+      return this.getFormatFromKey(supportedKey);
     }
 
-    //TODO: refactor tiers to be enumeration 
-    //TODO: refactor tiers nickname approach
-    if (tier == "uber") {
-      tier = "ubers";
+    const gen = normalizedArgs.find(arg => this.isValidGen(arg));
+    const tier = normalizedArgs
+      .map(arg => this.normalizeTier(arg))
+      .find(arg => this.isValidTier(arg));
+
+    if (gen && tier) {
+      const supportedFormat = this.getSupportedFormat(gen, tier);
+      if (supportedFormat) {
+        return supportedFormat;
+      }
     }
 
-    return {
-      generation: (gen || this.getDefault().generation).toLowerCase(),
-      tier: (tier || this.getDefault().tier).toLowerCase()
-    };
+    return this.getDefault();
   }
 
   public static getFormatFromKey(format: string): SmogonFormat {
-    const defaultFormat = this.getDefault();
-    const tier = this.Tiers.filter(t => format.includes(t))[0] || defaultFormat.tier;
-    const gen = this.Generations.filter(g => format.includes(g))[0] || defaultFormat.generation;
+    const normalizedFormat = (format || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+    const supportedFormat = this.SupportedFormats.find(candidate =>
+      normalizedFormat.includes(this.getKeyFrom(candidate))
+    );
 
-    return this.getFormat( [ tier, gen ] );
+    if (supportedFormat) {
+      return supportedFormat;
+    }
+
+    const generation = this.Generations.find(gen => normalizedFormat.includes(gen));
+    const tier = this.normalizeTier(normalizedFormat);
+    if (generation && this.isValidTier(tier)) {
+      const matchedFormat = this.getSupportedFormat(generation, tier);
+      if (matchedFormat) {
+        return matchedFormat;
+      }
+    }
+
+    const vgcTier = this.getVgcTierFromText(normalizedFormat);
+    if (vgcTier) {
+      const matchedVgcFormat = this.getSupportedFormat("gen9", vgcTier)
+        || this.getSupportedFormat("gen8", vgcTier);
+      if (matchedVgcFormat) {
+        return matchedVgcFormat;
+      }
+    }
+
+    return this.getDefault();
+  }
+
+  public static getFormatFromSetName(setName: string, generation: string): SmogonFormat | undefined {
+    const normalizedSetName = (setName || "").trim().toLowerCase();
+    const supportedSinglesTiers = this.getSinglesTiersForGeneration(generation);
+    const singlesTier = supportedSinglesTiers.find(tier =>
+      normalizedSetName === tier || normalizedSetName.startsWith(`${tier} `)
+    );
+
+    if (singlesTier) {
+      return this.getSupportedFormat(generation, singlesTier);
+    }
+
+    const vgcTier = this.getVgcTierFromText(normalizedSetName);
+    if (vgcTier) {
+      return this.getSupportedFormat(generation, vgcTier);
+    }
+
+    return undefined;
   }
 
   public static isValidGen(gen: string): boolean {
-    return this.Generations.some(g => g == gen.toLowerCase());
+    return this.Generations.some(g => g === gen.toLowerCase());
   }
 
   public static isValidTier(tier: string): boolean {
-    return this.Tiers.some(t => t == tier.toLowerCase());
+    return this.Tiers.some(t => t === this.normalizeTier(tier));
   }
 
   public static isValidFormat(format: string): boolean {
-    const validTier = this.Tiers.some(t => format.includes(t));
-    const validGen = this.Generations.some(g => format.includes(g));
-    return validTier && validGen;
+    const normalizedFormat = (format || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+    return this.SupportedFormats.some(candidate => normalizedFormat.includes(this.getKeyFrom(candidate)));
   }
 
   public static getDefault(): SmogonFormat {
-    return { generation: "gen8", tier: "ou" }; 
+    return { generation: "gen9", tier: "ou" }; 
   }
 
   public static getKeyFrom(format: SmogonFormat): string {
@@ -62,30 +128,34 @@ export class FormatHelper {
   }
 
   public static toString(format: SmogonFormat): string {
-    return `Gen ${format.generation[format.generation.length-1]} ${format.tier.toUpperCase()}`;
+    return `Gen${format.generation[format.generation.length-1]} ${format.tier.toUpperCase()}`;
   }
 
   public static getSmogonSet(pokemon: Pokemon, set: PokemonSet): string {
-    var evCounter = 0;
-    var pkmSetText = "";
+    let evCounter = 0;
+    let pkmSetText = "";
+    const evs = set.evs || {};
     pkmSetText = pokemon.name + (set.item ? " @ " + set.item : "") + "\n";
-    pkmSetText += set.nature + " Nature" + "\n";
+    pkmSetText += set.nature ? set.nature + " Nature" + "\n" : "";
     pkmSetText += set.ability ? "Ability: " + set.ability + "\n" : "";
     
-    pkmSetText += "EVs: ";
-    var evsArray = [];
-    for (var stat in set.evs) {
-      if (set.evs[stat]) {
-        evsArray.push(set.evs[stat] + " " + this.getDisplayStatName(stat));
-        evCounter += set.evs[stat];
+    const evsArray: string[] = [];
+    for (const stat of Object.keys(evs) as Array<keyof Evs>) {
+      const statValue = evs[stat];
+      if (statValue) {
+        evsArray.push(statValue + " " + this.getDisplayStatName(stat));
+        evCounter += statValue;
         if (evCounter > 510) break;
       }
     }
-    pkmSetText += evsArray.reduce((a,b) => `${a} / ${b}`); // serialize(evsArray, " / ");
-    pkmSetText += "\n";
+    if (evsArray.length > 0) {
+      pkmSetText += "EVs: ";
+      pkmSetText += evsArray.reduce((a,b) => `${a} / ${b}`);
+      pkmSetText += "\n";
+    }
     
-    for (var i = 0; i < 4; i++) {
-      var moveName = set.moves[i];
+    for (let i = 0; i < 4; i++) {
+      const moveName = set.moves[i];
       if (moveName !== "(No Move)") {
         pkmSetText += "- " + moveName + "\n";
       }
@@ -96,49 +166,60 @@ export class FormatHelper {
 
   // helpers
   
-  private static ensureValidVgc(tier: string, gen: string) {
-    if (this.hasValidVgcYear(tier)) {
-      gen = this.getValidVgcGen(gen, tier.substring(3));
-    }
-    else {
-      gen = this.getDefault().generation;
-      const year = FormatHelper.getValidVgcYear(gen);
-      tier = "vgc" + year;
-    }
-    return { tier, gen };
+  private static getDistinctGenerations(): string[] {
+    return Array.from(new Set(this.SupportedFormats.map(format => format.generation)));
   }
 
-  private static isVgc(tier: string): boolean { return tier && tier.startsWith("vgc"); };
-  
-  private static hasValidVgcYear(tier: string): boolean {
-    // pre conditions
-    if (tier.length != 7) return false;
-    if (!this.isVgc(tier)) return false;
-
-    const endingTerm = tier.substring(3);
-    return this.VgcSeasons.some(t => t.year == endingTerm)
-  };
-
-  private static getValidVgcYear(gen: string): string {
-    const currentYear = new Date().getFullYear().toString();
-    if (gen) {
-      const vgcByGen = this.VgcSeasons.find(i => i.gen == gen);
-      return vgcByGen ? vgcByGen.year : currentYear;
-    }
-    return currentYear;
+  private static getDistinctTiers(): string[] {
+    const tiers = this.SupportedFormats.map(format => format.tier).concat([ "uber" ]);
+    return Array.from(new Set(tiers));
   }
 
-  private static getValidVgcGen(gen: string, year: string): string {
-    if (gen) {
-      const vgcByGen = this.VgcSeasons.find(i => i.gen == gen);
-      return vgcByGen ? vgcByGen.gen : gen;
-    }
-    
-    const vgcByYear = this.VgcSeasons.find(i => i.year == year);
-    return vgcByYear ? vgcByYear.gen : this.getDefault().generation;
+  private static getSupportedFormat(generation: string, tier: string): SmogonFormat | undefined {
+    return this.SupportedFormats.find(format =>
+      format.generation === generation && format.tier === this.normalizeTier(tier)
+    );
   }
 
-  private static getDisplayStatName(stat: string) {
+  private static getSinglesTiersForGeneration(generation: string): string[] {
+    return this.SupportedFormats
+      .filter(format => format.generation === generation && !format.tier.startsWith("vgc"))
+      .map(format => format.tier);
+  }
+
+  private static getVgcTierFromText(text: string): string | undefined {
+    const regulationMatch = text.match(/reg([a-z])/i);
+    if (regulationMatch) {
+      return this.VgcRegulations[`reg${regulationMatch[1].toLowerCase()}`];
+    }
+
+    const legacyYearMatch = text.match(/vgc(\d{4})/i);
+    if (legacyYearMatch) {
+      return this.LegacyVgcAliases[legacyYearMatch[1]];
+    }
+
+    const spacedLegacyYearMatch = text.match(/vgc\s+(\d{4})/i);
+    if (spacedLegacyYearMatch) {
+      return this.LegacyVgcAliases[spacedLegacyYearMatch[1]];
+    }
+
+    return undefined;
+  }
+
+  private static normalizeTier(tier: string): string {
+    if (!tier) {
+      return tier;
+    }
+
+    if (tier === "uber") {
+      return "ubers";
+    }
+
+    const vgcTier = this.getVgcTierFromText(tier);
+    return vgcTier || tier.toLowerCase();
+  }
+
+  private static getDisplayStatName(stat: keyof Evs): string {
     switch (stat) {
       case 'hp': return 'HP';
       case 'at': return 'Atk';

@@ -2,59 +2,102 @@ import { PokemonUsage, MoveSetUsage, SmogonFormat } from "./usageModels";
 import { FormatHelper } from "../formatHelper";
 import { FileHelper } from "../common/fileHelper";
 
+interface UsageStatsFile {
+  data: {
+    rows: Array<[number, string, number, number, ...number[]]>;
+  };
+}
+
 export class SmogonStats {
 
-  private usages: Map<string, PokemonUsage>;
-  private database: Map<string, any> = new Map;
+  private usages: Map<string, Map<string, PokemonUsage>> = new Map;
+  private leads: Map<string, Map<string, PokemonUsage>> = new Map;
+  private database: Map<string, unknown> = new Map;
 
-  public async getMoveSets(format: SmogonFormat, filter: (pkm: MoveSetUsage) => boolean = undefined): Promise<MoveSetUsage[]> {
+  public async getMoveSets(format?: SmogonFormat, filter?: (pkm: MoveSetUsage) => boolean): Promise<MoveSetUsage[]> {
     const sets = await this.getMovesetData(format);
     return filter
       ? sets.filter(filter)
       : sets;
   }
 
-  public async getMoveSet(pokemon: string, format: SmogonFormat = undefined): Promise<MoveSetUsage> {
+  public async getMoveSet(pokemon: string, format?: SmogonFormat): Promise<MoveSetUsage | undefined> {
     const sets = await this.getMoveSets(format);
-    var moveset = sets.find(e => e.name.toLowerCase() == pokemon.toLowerCase());
+    const moveset = sets.find(e => e.name.toLowerCase() === pokemon.toLowerCase());
     if (moveset)
       moveset.usage = (await this.getUsage(pokemon, format))?.rank || 0;
     return moveset;
   }
 
-  public async getUsages(format: SmogonFormat = undefined): Promise<Map<string, PokemonUsage>> {
-    if (!this.usages) {
+  public async getUsages(format?: SmogonFormat): Promise<Map<string, PokemonUsage>> {
+    format = format || FormatHelper.getDefault();
+    const formatKey = FormatHelper.getKeyFrom(format);
+
+    if (!this.usages.has(formatKey)) {
       //[1,"Zygarde",24.764,369434,15.561,288085,15.522]
       const usageData = await this.getUsageData(format);
       
-      this.usages = new Map;
+      const usages = new Map<string, PokemonUsage>();
       for (const mon of usageData.data.rows) {
-        this.usages.set(mon[1].toString(), { name: mon[1], rank: mon[0], usageRaw: mon[2] } as PokemonUsage);
+        usages.set(mon[1].toString(), {
+          name: mon[1],
+          rank: mon[0],
+          usagePercentage: mon[2],
+          usageRaw: mon[3]
+        } as PokemonUsage);
       }
+
+      this.usages.set(formatKey, usages);
     }
-    return this.usages;
+    return this.usages.get(formatKey)!;
   }
 
-  public async getUsage(pokemon: string, format: SmogonFormat = undefined): Promise<PokemonUsage> {
+  public async getLeads(format?: SmogonFormat): Promise<Map<string, PokemonUsage>> {
+    format = format || FormatHelper.getDefault();
+    const formatKey = FormatHelper.getKeyFrom(format);
+
+    if (!this.leads.has(formatKey)) {
+      const leadsData = await this.getLeadsData(format);
+
+      const leads = new Map<string, PokemonUsage>();
+      for (const mon of leadsData.data.rows) {
+        leads.set(mon[1].toString(), {
+          name: mon[1],
+          rank: mon[0],
+          usagePercentage: mon[2],
+          usageRaw: mon[3]
+        } as PokemonUsage);
+      }
+
+      this.leads.set(formatKey, leads);
+    }
+    return this.leads.get(formatKey)!;
+  }
+
+  public async getUsage(pokemon: string, format?: SmogonFormat): Promise<PokemonUsage | undefined> {
     const usages = await this.getUsages(format);
     return usages.get(pokemon);
   }
 
   // privates
-  private async getMovesetData(format: SmogonFormat = undefined): Promise<MoveSetUsage[]> {
+  private async getMovesetData(format?: SmogonFormat): Promise<MoveSetUsage[]> {
     return await this.getData<MoveSetUsage[]>("moveset", format);
   }
 
-  private async getUsageData(format: SmogonFormat = undefined): Promise<any> {
-    return await this.getData<any>("usage", format);
+  private async getUsageData(format?: SmogonFormat): Promise<UsageStatsFile> {
+    return await this.getData<UsageStatsFile>("usage", format);
   }
 
-  private async getData<T>(dataType: string, format: SmogonFormat = undefined): Promise<T> {
+  private async getLeadsData(format?: SmogonFormat): Promise<UsageStatsFile> {
+    return await this.getData<UsageStatsFile>("leads", format);
+  }
+
+  private async getData<T>(dataType: string, format?: SmogonFormat): Promise<T> {
     format = format || FormatHelper.getDefault();
     
     const dataKey = `${dataType}-${FormatHelper.getKeyFrom(format)}`;
     const data:T = this.database.has(dataKey)
-      ? this.database.get(dataKey)
+      ? this.database.get(dataKey) as T
       : await FileHelper.loadFileData<T>(`smogon-stats/${format.generation}/${format.tier}/${dataKey}.json`);
     
     this.database.set(dataKey, data);

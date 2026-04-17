@@ -1,74 +1,157 @@
 <ul class="collapsible popout">
     {{#each this}}
     <li>
-        <div class="collapsible-header">
-            <span class="pkm-icon pkm-icon-{{safePkmName name}}"></span>{{name}}
-            <span class="badge">{{uppercase format.tier}} usage rank: #{{usageData.usage}}</span>
-            <span class="badge">Tier: {{pokemon.tier}}</span>
-            {{!-- <span class="badge">Gen: {{pokemon.generation}}</span>
-            <span class="badge">Another: {{name}}</span> --}}
+        <div class="collapsible-header pokemon-summary">
+            <div class="pokemon-summary-main">
+                <span class="pkm-sprite sprite-{{safePkmName name}}" aria-hidden="true"></span>
+                <span class="pokemon-summary-name">{{name}}</span>
+            </div>
+            <div class="pokemon-summary-meta">
+                <span class="summary-chip summary-chip-format">{{formatLabel}}</span>
+                <span class="summary-chip summary-chip-rank">Usage rank: #{{usageData.usage}}</span>
+                <span class="summary-chip summary-chip-tier">Tier: {{uppercase pokemon.tier}}</span>
+            </div>
         </div>
         <div class="collapsible-body">
             <ul class="tabs tabs-fixed-width">
-                <li class="tab col s3"><a href="#usage-data-{{safePkmName name}}" class="waves-effect active">Usage</a></li>
-                <li class="tab col s3"><a href="#ivs-data-{{safePkmName name}}" class="waves-effect">IVs/Counters</a></li>
-                <li class="tab col s3"><a href="#sets-data-{{safePkmName name}}" class="waves-effect">Sets</a></li>
-                <li class="tab col s3"><a href="#extra-data-{{safePkmName name}}" class="waves-effect">Extra</a></li>
+                <li class="tab"><a href="#usage-data-{{safePkmName name}}" class="waves-effect active">Usage</a></li>
+                <li class="tab"><a href="#battling-data-{{safePkmName name}}" class="waves-effect">Battling</a></li>
+                <li class="tab"><a href="#ivs-data-{{safePkmName name}}" class="waves-effect">IVs/Counters</a></li>
+                <li class="tab"><a href="#sets-data-{{safePkmName name}}" class="waves-effect">Sets</a></li>
+                <li class="tab"><a href="#extra-data-{{safePkmName name}}" class="waves-effect">Extra</a></li>
             </ul>
 
-            <div id="usage-data-{{safePkmName name}}" class="row">
-                </br>
-                <div class="col s4 set-detail">
-                    <strong>Moves</strong>
+            <div id="usage-data-{{safePkmName name}}" class="row tab-panel">
+                <div class="col s4 set-detail detail-section">
+                    <strong class="detail-section-title">Moves</strong>
                     {{#limit usageData.moves limit="8"}}
-                        <div><div class="name">{{name}}: </div><strong class="value">{{perc percentage digits="1"}}%</strong></div>
+                        <div class="detail-line">
+                            <span class="detail-key detail-key-with-icon">
+                                {{#if typeIconSrc}}
+                                    <span class="usage-inline-icon-frame" aria-hidden="true">
+                                        <img class="usage-type-icon" src="{{typeIconSrc}}" alt="" />
+                                    </span>
+                                {{/if}}
+                                <span>{{name}}</span>
+                            </span>
+                            <strong class="detail-value">{{perc percentage digits="1"}}%</strong>
+                        </div>
                     {{/limit}}
                 </div>
-                <div class="col s4 set-detail">
-                    <strong>Items</strong>
+                <div class="col s4 set-detail detail-section">
+                    <strong class="detail-section-title">Items</strong>
                     {{#limit usageData.items limit="8"}}
-                        <div><span class="name">{{name}}: </span><strong class="value">{{perc percentage digits="1"}}%</strong></div>
+                        <div class="detail-line">
+                            <span class="detail-key detail-key-with-icon">
+                                <span class="usage-inline-icon-frame" aria-hidden="true">
+                                    <span class="pkm-sprite usage-inline-sprite-icon sprite-{{spriteName name}}"></span>
+                                </span>
+                                <span>{{name}}</span>
+                            </span>
+                            <strong class="detail-value">{{perc percentage digits="1"}}%</strong>
+                        </div>
                     {{/limit}}
                 </div>
-                <div class="col s4 set-detail">
-                    <strong>Abilities</strong>
-                    {{#each usageData.abilities}}
-                        <div><span class="name">{{name}}: </span><strong class="value">{{perc percentage digits="1"}}%</strong></div>
-                    {{/each}}
+                <div class="col s4 set-detail detail-section">
+                    <div class="detail-subsection">
+                        <strong class="detail-section-title">Abilities</strong>
+                        {{#each usageData.abilities}}
+                            <div class="detail-line">
+                                <span class="detail-key">{{name}}</span>
+                                <strong class="detail-value">{{perc percentage digits="1"}}%</strong>
+                            </div>
+                        {{/each}}
+                    </div>
+                    {{#if usageData.teraTypes}}
+                    <div class="detail-subsection">
+                        <strong class="detail-section-title">Tera Types</strong>
+                        {{#limit usageData.teraTypes limit="5"}}
+                            <div class="detail-line">
+                                <span class="detail-key detail-key-with-icon">
+                                    {{#if typeIconSrc}}
+                                        <span class="usage-inline-icon-frame" aria-hidden="true">
+                                            <img class="usage-type-icon" src="{{typeIconSrc}}" alt="" />
+                                        </span>
+                                    {{/if}}
+                                    <span>{{name}}</span>
+                                </span>
+                                <strong class="detail-value">{{perc percentage digits="1"}}%</strong>
+                            </div>
+                        {{/limit}}
+                    </div>
+                    {{/if}}
                 </div>
             </div>
-            <div id="ivs-data-{{safePkmName name}}" class="row">
-                </br>
-                <div class="col s6 set-detail">
-                    <strong>IVs Spreads</strong>
+            <div id="battling-data-{{safePkmName name}}" class="row tab-panel">
+                <div class="col s4 set-detail detail-section">
+                    <strong class="detail-section-title">Leads</strong>
+                    {{#if battlingData.leads}}
+                        {{#each battlingData.leads}}
+                            <div class="detail-line detail-line-split">
+                                <span class="detail-key detail-key-compact detail-key-with-icon">
+                                    {{#if pokemonSpriteName}}
+                                        <span class="usage-inline-icon-frame" aria-hidden="true">
+                                            <span class="pkm-sprite usage-inline-sprite-icon sprite-{{safePkmName pokemonSpriteName}}"></span>
+                                        </span>
+                                    {{/if}}
+                                    <span>{{name}}</span>
+                                </span>
+                                <span class="detail-value detail-value-compact">#{{rank}} <strong>{{perc usagePercentage digits="1"}}%</strong></span>
+                            </div>
+                        {{/each}}
+                    {{else}}
+                        <div class="tab-message">No lead data found for the opponent team in this format.</div>
+                    {{/if}}
+                </div>
+                <div class="col s4 set-detail detail-section">
+                    <strong class="detail-section-title">Speed-tier</strong>
+                    <div class="tab-message">Coming soon.</div>
+                </div>
+                <div class="col s4 set-detail detail-section">
+                    <strong class="detail-section-title">Roles</strong>
+                    <div class="tab-message">Coming soon.</div>
+                </div>
+            </div>
+            <div id="ivs-data-{{safePkmName name}}" class="row tab-panel">
+                <div class="col s6 set-detail detail-section">
+                    <strong class="detail-section-title">IVs Spreads</strong>
                     {{#limit usageData.spreads limit="8"}}
-                        <div><div class="name">{{name}}: </div><strong class="value">{{perc percentage digits="1"}}%</strong></div>
+                        <div class="detail-line">
+                            <span class="detail-key">{{name}}</span>
+                            <strong class="detail-value">{{perc percentage digits="1"}}%</strong>
+                        </div>
                     {{/limit}}
                 </div>
-                <div class="col s6 set-detail">
-                    <strong>Counters and Checkers</strong>
+                <div class="col s6 set-detail detail-section">
+                    <strong class="detail-section-title">Counters and Checkers</strong>
                     {{#limit usageData.checksAndCounters limit="8"}}
-                        <div>
-                            <div class="small-name">{{name}}: </div>
-                            <div class="composed-value">KO: <strong>{{perc kOed digits="0"}}%</strong> / Sw.out: <strong>{{perc switchedOut digits="0"}}%</strong></div>
+                        <div class="detail-line detail-line-split">
+                            <span class="detail-key detail-key-compact detail-key-with-icon">
+                                {{#if pokemonSpriteName}}
+                                    <span class="usage-inline-icon-frame" aria-hidden="true">
+                                        <span class="pkm-sprite usage-inline-sprite-icon sprite-{{safePkmName pokemonSpriteName}}"></span>
+                                    </span>
+                                {{/if}}
+                                <span>{{name}}</span>
+                            </span>
+                            <span class="detail-value detail-value-compact">KO: <strong>{{perc kOed digits="0"}}%</strong> / Sw.: <strong>{{perc switchedOut digits="0"}}%</strong></span>
                         </div>
                     {{/limit}}
                 </div>
             </div>
-            <div id="sets-data-{{safePkmName name}}" class="row">
+            <div id="sets-data-{{safePkmName name}}" class="row tab-panel">
                 {{#if sets}} 
                     {{#limit sets limit="6"}}
-                    <div class="col s6 set-detail left-align" style="white-space: pre-line">
-                        <strong>{{name}}</strong>
-                        {{set}}
+                    <div class="col s6 set-detail left-align set-card">
+                        <strong class="set-card-title">{{name}}</strong>
+                        <div class="set-card-body">{{set}}</div>
                     </div>
                     {{/limit}}
                 {{else}} 
-                    </br>
-                    <div>No sets found for {{pokemon.name}} in {{format.generation}}{{format.tier}}</div>
+                    <div class="tab-message">No sets found for {{pokemon.name}} in {{format.generation}}{{format.tier}}</div>
                 {{/if}}
             </div>
-            <div id="extra-data-{{safePkmName name}}" class="row">
+            <div id="extra-data-{{safePkmName name}}" class="row tab-panel">
                 {{> pkmExtraData}} 
             </div>
         </div>

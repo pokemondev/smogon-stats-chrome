@@ -1,10 +1,10 @@
-import FuzzyMatching = require('fuzzy-matching');
+import FuzzyMatching from 'fuzzy-matching';
 import { Pokemon } from "./pokemonModels";
 import database from '../../../data/pokemon-db.json'
 
 export class PokemonDb {
 
-  private pokemonMap: { [name: string]: Pokemon } = {};
+  private pokemonMap: Record<string, Pokemon> = {};
   private fuzzyMatching: FuzzyMatching;
 
   constructor() {
@@ -12,13 +12,14 @@ export class PokemonDb {
     this.fuzzyMatching = new FuzzyMatching(database.map(p => p.name));
   }
 
-  public getPokemon(name: string): Pokemon {
+  public getPokemon(name: string): Pokemon | undefined {
     const pokemon = this.pokemonMap[name.toLowerCase()];
-    if (pokemon)
+    if (pokemon) {
       return pokemon;
+    }
 
     const match = this.fuzzyMatching.get(name);
-    return (match.distance >= 0.5)
+    return (match.distance >= 0.5 && match.value)
       ? this.pokemonMap[match.value.toLowerCase()]
       : undefined;
   }
