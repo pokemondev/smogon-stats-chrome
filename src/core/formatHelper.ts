@@ -126,7 +126,7 @@ export class FormatHelper {
   }
 
   public static toString(format: SmogonFormat): string {
-    return `Gen ${format.generation[format.generation.length-1]} ${format.tier.toUpperCase()}`;
+    return `Gen${format.generation[format.generation.length-1]} ${format.tier.toUpperCase()}`;
   }
 
   public static getSmogonSet(pokemon: Pokemon, set: PokemonSet): string {
@@ -137,7 +137,7 @@ export class FormatHelper {
     pkmSetText += set.nature ? set.nature + " Nature" + "\n" : "";
     pkmSetText += set.ability ? "Ability: " + set.ability + "\n" : "";
     
-    var evsArray = [];
+    var evsArray: string[] = [];
     for (var stat in evs) {
       if (evs[stat]) {
         evsArray.push(evs[stat] + " " + this.getDisplayStatName(stat));

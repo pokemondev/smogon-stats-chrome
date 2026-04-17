@@ -87,6 +87,7 @@ async function displayTeamStats(battleInfo: BattleInfo) {
                               pokemon: pkm, 
                               gifUrl: ImageService.getGifUrl(pkm),
                               format: format,
+                              formatLabel: FormatHelper.toString(format),
                               usageData: teamMoveset.find(i => i?.name == pkm?.name),
                               sets: SmogonSets.get(pkm, format)
                                               .map(set => ({name: set.name, set: FormatHelper.getSmogonSet(pkm, set)}))
