@@ -62,6 +62,11 @@ body {
     margin: 0;
 }
 
+.collapsible-body .tabs .tab a {
+    padding: 0 10px;
+    font-size: 13px;
+}
+
 .collapsible-body .row {
     margin-left: -0.6rem;
     margin-right: -0.6rem;
@@ -198,7 +203,7 @@ body {
     gap: 8px;
 }
 
-.usage-item-icon-frame {
+.usage-inline-icon-frame {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -222,11 +227,19 @@ body {
     min-width: 120px;
 }
 
-.usage-item-icon {
+.usage-inline-sprite-icon {
     flex: 0 0 auto;
     margin-right: 0;
     transform: scale(0.66);
     transform-origin: center;
+}
+
+.usage-type-icon {
+    display: block;
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    image-rendering: pixelated;
 }
 
 .set-card {

@@ -11,6 +11,7 @@ interface UsageStatsFile {
 export class SmogonStats {
 
   private usages: Map<string, Map<string, PokemonUsage>> = new Map;
+  private leads: Map<string, Map<string, PokemonUsage>> = new Map;
   private database: Map<string, unknown> = new Map;
 
   public async getMoveSets(format?: SmogonFormat, filter?: (pkm: MoveSetUsage) => boolean): Promise<MoveSetUsage[]> {
@@ -51,6 +52,28 @@ export class SmogonStats {
     return this.usages.get(formatKey)!;
   }
 
+  public async getLeads(format?: SmogonFormat): Promise<Map<string, PokemonUsage>> {
+    format = format || FormatHelper.getDefault();
+    const formatKey = FormatHelper.getKeyFrom(format);
+
+    if (!this.leads.has(formatKey)) {
+      const leadsData = await this.getLeadsData(format);
+
+      const leads = new Map<string, PokemonUsage>();
+      for (const mon of leadsData.data.rows) {
+        leads.set(mon[1].toString(), {
+          name: mon[1],
+          rank: mon[0],
+          usagePercentage: mon[2],
+          usageRaw: mon[3]
+        } as PokemonUsage);
+      }
+
+      this.leads.set(formatKey, leads);
+    }
+    return this.leads.get(formatKey)!;
+  }
+
   public async getUsage(pokemon: string, format?: SmogonFormat): Promise<PokemonUsage | undefined> {
     const usages = await this.getUsages(format);
     return usages.get(pokemon);
@@ -63,6 +86,10 @@ export class SmogonStats {
 
   private async getUsageData(format?: SmogonFormat): Promise<UsageStatsFile> {
     return await this.getData<UsageStatsFile>("usage", format);
+  }
+
+  private async getLeadsData(format?: SmogonFormat): Promise<UsageStatsFile> {
+    return await this.getData<UsageStatsFile>("leads", format);
   }
 
   private async getData<T>(dataType: string, format?: SmogonFormat): Promise<T> {

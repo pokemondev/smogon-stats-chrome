@@ -1,6 +1,6 @@
 /// <reference types="chrome" />
 
-import { Pokemon } from "./core/pokemon/pokemonModels";
+import { Pokemon, PokemonType } from "./core/pokemon/pokemonModels";
 import { PokemonDb } from "./core/pokemon/pokemonDb";
 import { SmogonStats } from "./core/smogon/smogonStats";
 import pokemonListTemplate from './templates/pokemonItem.hbs';
@@ -9,6 +9,8 @@ import { BattleInfo, ResponseMessage } from "./core/extensionModels";
 import { SmogonSets } from "./core/smogon/smogonSets";
 import { FormatHelper } from "./core/formatHelper";
 import { ImageService } from "./core/pokemon/imageService";
+import { Movedex } from "./core/pokemon/movedex";
+import { ChecksAndCountersUsageData, MoveSetUsage, PokemonUsage, UsageData } from "./core/smogon/usageModels";
 
 type ResolvedPokemon = {
   teamMemberName: string;
@@ -19,6 +21,31 @@ type FoundPokemon = {
   teamMemberName: string;
   pokemon: Pokemon;
 };
+
+type UsageEntryWithTypeIcon = UsageData & {
+  typeIconSrc?: string;
+};
+
+type ChecksAndCountersEntryWithSprite = ChecksAndCountersUsageData & {
+  pokemonSpriteName?: string;
+};
+
+type LeadEntryWithSprite = PokemonUsage & {
+  pokemonSpriteName?: string;
+};
+
+type DecoratedMoveSetUsage = MoveSetUsage & {
+  moves: UsageEntryWithTypeIcon[];
+  teraTypes?: UsageEntryWithTypeIcon[];
+  checksAndCounters: ChecksAndCountersEntryWithSprite[];
+};
+
+type BattlingTabData = {
+  leads: LeadEntryWithSprite[];
+};
+
+const supportedTypeIconNames = new Set<string>(Object.values(PokemonType).map(type => type.toLowerCase()));
+const unresolvedSpriteNames = new Set<string>(["other", "nothing"]);
 
 let communicationDone = false;
 let showdownResponseTimeout: number | undefined;
@@ -84,12 +111,14 @@ function getOpponentsTeam() {
 
 async function displayTeamStats(battleInfo: BattleInfo) {
   const pokemonDb = new PokemonDb();
+  const movedex = new Movedex();
   const smogonStats = new SmogonStats();
   await SmogonSets.initialize();
 
   const team = battleInfo.opponentTeam;
   const format = FormatHelper.getFormatFromKey(battleInfo.format);
   const teamMoveset = await Promise.all(team.map(async pkmName => await smogonStats.getMoveSet(pkmName, format)));
+  const leads = await smogonStats.getLeads(format);
   const resolvedPokemon: ResolvedPokemon[] = team
     .map(teamMemberName => ({
       teamMemberName,
@@ -104,19 +133,33 @@ async function displayTeamStats(battleInfo: BattleInfo) {
     return;
   }
 
-  const teamUsageData = resolvedPokemon
-                            .filter((entry): entry is FoundPokemon => entry.pokemon !== undefined)
-                            .map(entry => entry.pokemon)
-                            .map(pkm => ({
-                              name: pkm.name, 
-                              pokemon: pkm, 
-                              gifUrl: ImageService.getGifUrl(pkm),
-                              format: format,
-                              formatLabel: FormatHelper.toString(format),
-                              usageData: teamMoveset.find(i => i?.name === pkm.name),
-                              sets: SmogonSets.get(pkm, format)
-                                              .map(set => ({name: set.name, set: FormatHelper.getSmogonSet(pkm, set)}))
-                            }));
+  const foundPokemon = resolvedPokemon
+    .filter((entry): entry is FoundPokemon => entry.pokemon !== undefined)
+    .map(entry => entry.pokemon);
+  const battlingData = {
+    leads: getOpponentLeads(foundPokemon, leads, pokemonDb),
+  } as BattlingTabData;
+
+  const teamUsageData = foundPokemon
+                            .map(pkm => {
+                              const usageData = decorateMoveSetUsage(
+                                teamMoveset.find(moveset => moveset?.name === pkm.name),
+                                pokemonDb,
+                                movedex,
+                              );
+
+                              return {
+                                name: pkm.name,
+                                pokemon: pkm,
+                                gifUrl: ImageService.getGifUrl(pkm),
+                                format: format,
+                                formatLabel: FormatHelper.toString(format),
+                                battlingData: battlingData,
+                                usageData: usageData,
+                                sets: SmogonSets.get(pkm, format)
+                                                .map(set => ({name: set.name, set: FormatHelper.getSmogonSet(pkm, set)}))
+                              };
+                            });
   console.log(teamUsageData);
   
   renderMainList(pokemonListTemplate(teamUsageData));
@@ -169,4 +212,100 @@ function completeCommunication() {
     window.clearTimeout(showdownResponseTimeout);
     showdownResponseTimeout = undefined;
   }
+}
+
+function decorateMoveSetUsage(
+  moveset: MoveSetUsage | undefined,
+  pokemonDb: PokemonDb,
+  movedex: Movedex,
+): DecoratedMoveSetUsage | undefined {
+  if (!moveset) {
+    return undefined;
+  }
+
+  return {
+    ...moveset,
+    moves: moveset.moves.map(move => decorateMoveUsage(move, movedex)),
+    teraTypes: moveset.teraTypes?.map(teraType => decorateTeraTypeUsage(teraType)),
+    checksAndCounters: moveset.checksAndCounters.map(counter => decorateCounterUsage(counter, pokemonDb)),
+  };
+}
+
+function decorateMoveUsage(move: UsageData, movedex: Movedex): UsageEntryWithTypeIcon {
+  const moveType = shouldResolveNamedAsset(move.name)
+    ? movedex.getMove(move.name)?.type
+    : undefined;
+
+  return {
+    ...move,
+    typeIconSrc: getTypeIconSrc(moveType),
+  };
+}
+
+function decorateTeraTypeUsage(teraType: UsageData): UsageEntryWithTypeIcon {
+  return {
+    ...teraType,
+    typeIconSrc: getTypeIconSrc(teraType.name),
+  };
+}
+
+function decorateCounterUsage(
+  counter: ChecksAndCountersUsageData,
+  pokemonDb: PokemonDb,
+): ChecksAndCountersEntryWithSprite {
+  return {
+    ...counter,
+    pokemonSpriteName: getCounterSpriteName(counter.name, pokemonDb),
+  };
+}
+
+function getOpponentLeads(
+  opponentTeam: Pokemon[],
+  leads: Map<string, PokemonUsage>,
+  pokemonDb: PokemonDb,
+): LeadEntryWithSprite[] {
+  return opponentTeam
+    .map(pokemon => leads.get(pokemon.name))
+    .filter((lead): lead is PokemonUsage => !!lead && lead.rank > 0)
+    .sort((left, right) => left.rank - right.rank)
+    .slice(0, 8)
+    .map(lead => decorateLeadUsage(lead, pokemonDb));
+}
+
+function decorateLeadUsage(
+  lead: PokemonUsage,
+  pokemonDb: PokemonDb,
+): LeadEntryWithSprite {
+  return {
+    ...lead,
+    pokemonSpriteName: getCounterSpriteName(lead.name, pokemonDb),
+  };
+}
+
+function getCounterSpriteName(name: string, pokemonDb: PokemonDb): string | undefined {
+  if (!shouldResolveNamedAsset(name)) {
+    return undefined;
+  }
+
+  const pokemon = pokemonDb.getPokemon(name);
+  return pokemon
+    ? pokemon.name
+    : undefined;
+}
+
+function getTypeIconSrc(typeName?: string | null): string | undefined {
+  const normalizedTypeName = (typeName || "").trim();
+  if (!normalizedTypeName) {
+    return undefined;
+  }
+
+  const lowerTypeName = normalizedTypeName.toLowerCase();
+  return supportedTypeIconNames.has(lowerTypeName)
+    ? `img/types/${lowerTypeName}.png`
+    : undefined;
+}
+
+function shouldResolveNamedAsset(name: string): boolean {
+  const normalizedName = (name || "").trim().toLowerCase();
+  return normalizedName.length > 0 && !unresolvedSpriteNames.has(normalizedName);
 }

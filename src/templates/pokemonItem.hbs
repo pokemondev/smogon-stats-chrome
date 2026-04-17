@@ -14,10 +14,11 @@
         </div>
         <div class="collapsible-body">
             <ul class="tabs tabs-fixed-width">
-                <li class="tab col s3"><a href="#usage-data-{{safePkmName name}}" class="waves-effect active">Usage</a></li>
-                <li class="tab col s3"><a href="#ivs-data-{{safePkmName name}}" class="waves-effect">IVs/Counters</a></li>
-                <li class="tab col s3"><a href="#sets-data-{{safePkmName name}}" class="waves-effect">Sets</a></li>
-                <li class="tab col s3"><a href="#extra-data-{{safePkmName name}}" class="waves-effect">Extra</a></li>
+                <li class="tab"><a href="#usage-data-{{safePkmName name}}" class="waves-effect active">Usage</a></li>
+                <li class="tab"><a href="#battling-data-{{safePkmName name}}" class="waves-effect">Battling</a></li>
+                <li class="tab"><a href="#ivs-data-{{safePkmName name}}" class="waves-effect">IVs/Counters</a></li>
+                <li class="tab"><a href="#sets-data-{{safePkmName name}}" class="waves-effect">Sets</a></li>
+                <li class="tab"><a href="#extra-data-{{safePkmName name}}" class="waves-effect">Extra</a></li>
             </ul>
 
             <div id="usage-data-{{safePkmName name}}" class="row tab-panel">
@@ -25,7 +26,14 @@
                     <strong class="detail-section-title">Moves</strong>
                     {{#limit usageData.moves limit="8"}}
                         <div class="detail-line">
-                            <span class="detail-key">{{name}}</span>
+                            <span class="detail-key detail-key-with-icon">
+                                {{#if typeIconSrc}}
+                                    <span class="usage-inline-icon-frame" aria-hidden="true">
+                                        <img class="usage-type-icon" src="{{typeIconSrc}}" alt="" />
+                                    </span>
+                                {{/if}}
+                                <span>{{name}}</span>
+                            </span>
                             <strong class="detail-value">{{perc percentage digits="1"}}%</strong>
                         </div>
                     {{/limit}}
@@ -35,8 +43,8 @@
                     {{#limit usageData.items limit="8"}}
                         <div class="detail-line">
                             <span class="detail-key detail-key-with-icon">
-                                <span class="usage-item-icon-frame" aria-hidden="true">
-                                    <span class="pkm-sprite usage-item-icon sprite-{{spriteName name}}"></span>
+                                <span class="usage-inline-icon-frame" aria-hidden="true">
+                                    <span class="pkm-sprite usage-inline-sprite-icon sprite-{{spriteName name}}"></span>
                                 </span>
                                 <span>{{name}}</span>
                             </span>
@@ -59,12 +67,49 @@
                         <strong class="detail-section-title">Tera Types</strong>
                         {{#limit usageData.teraTypes limit="5"}}
                             <div class="detail-line">
-                                <span class="detail-key">{{name}}</span>
+                                <span class="detail-key detail-key-with-icon">
+                                    {{#if typeIconSrc}}
+                                        <span class="usage-inline-icon-frame" aria-hidden="true">
+                                            <img class="usage-type-icon" src="{{typeIconSrc}}" alt="" />
+                                        </span>
+                                    {{/if}}
+                                    <span>{{name}}</span>
+                                </span>
                                 <strong class="detail-value">{{perc percentage digits="1"}}%</strong>
                             </div>
                         {{/limit}}
                     </div>
                     {{/if}}
+                </div>
+            </div>
+            <div id="battling-data-{{safePkmName name}}" class="row tab-panel">
+                <div class="col s4 set-detail detail-section">
+                    <strong class="detail-section-title">Leads</strong>
+                    {{#if battlingData.leads}}
+                        {{#each battlingData.leads}}
+                            <div class="detail-line detail-line-split">
+                                <span class="detail-key detail-key-compact detail-key-with-icon">
+                                    {{#if pokemonSpriteName}}
+                                        <span class="usage-inline-icon-frame" aria-hidden="true">
+                                            <span class="pkm-sprite usage-inline-sprite-icon sprite-{{safePkmName pokemonSpriteName}}"></span>
+                                        </span>
+                                    {{/if}}
+                                    <span>{{name}}</span>
+                                </span>
+                                <span class="detail-value detail-value-compact">#{{rank}} <strong>{{perc usagePercentage digits="1"}}%</strong></span>
+                            </div>
+                        {{/each}}
+                    {{else}}
+                        <div class="tab-message">No lead data found for the opponent team in this format.</div>
+                    {{/if}}
+                </div>
+                <div class="col s4 set-detail detail-section">
+                    <strong class="detail-section-title">Speed-tier</strong>
+                    <div class="tab-message">Coming soon.</div>
+                </div>
+                <div class="col s4 set-detail detail-section">
+                    <strong class="detail-section-title">Roles</strong>
+                    <div class="tab-message">Coming soon.</div>
                 </div>
             </div>
             <div id="ivs-data-{{safePkmName name}}" class="row tab-panel">
@@ -81,7 +126,14 @@
                     <strong class="detail-section-title">Counters and Checkers</strong>
                     {{#limit usageData.checksAndCounters limit="8"}}
                         <div class="detail-line detail-line-split">
-                            <span class="detail-key detail-key-compact">{{name}}</span>
+                            <span class="detail-key detail-key-compact detail-key-with-icon">
+                                {{#if pokemonSpriteName}}
+                                    <span class="usage-inline-icon-frame" aria-hidden="true">
+                                        <span class="pkm-sprite usage-inline-sprite-icon sprite-{{safePkmName pokemonSpriteName}}"></span>
+                                    </span>
+                                {{/if}}
+                                <span>{{name}}</span>
+                            </span>
                             <span class="detail-value detail-value-compact">KO: <strong>{{perc kOed digits="0"}}%</strong> / Sw.: <strong>{{perc switchedOut digits="0"}}%</strong></span>
                         </div>
                     {{/limit}}
