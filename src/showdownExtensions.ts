@@ -9,8 +9,7 @@ export class ShowdownExtensions {
       const appMsg = message as AppMessage;
       const response = ShowdownExtensions.executeOperation(appMsg.operation);
       console.log(response)
-      const shouldSendResponse = ShowdownExtensions.isSet(response) && ShowdownExtensions.isSet(sendResponse);
-      if (shouldSendResponse) {
+      if (response !== undefined) {
         sendResponse(response);
       }
     });
@@ -47,16 +46,12 @@ export class ShowdownExtensions {
     return ResponseMessageFactory.createFor(new BattleInfo(format, opponentTeam));
   }
 
-  public static executeOperation(operation: string): string | void {
-    var containsOperation = Object.keys(this).some(k => k == operation);
-    return containsOperation
-      ? this[operation]()
+  public static executeOperation(operation: string): unknown {
+    const operationHandler = (this as unknown as Record<string, unknown>)[operation];
+    return typeof operationHandler === "function"
+      ? (operationHandler as () => unknown)()
       : undefined;
   }
-  
-  private static isSet(arg: any): boolean { 
-    return arg ? true : false 
-  };
 
   private static getCurrentBattleRoomId(): string | undefined {
     const activeRoomTab = document.querySelector("div.tabbar.maintabbar a.roomtab.button.cur") as HTMLAnchorElement;
@@ -80,7 +75,7 @@ export class ShowdownExtensions {
   }
 
   private static getOpponentTeam(roomContainer: HTMLElement, opponentName: string): string[] | undefined {
-    const historyEntries = Array.prototype.slice.call(
+    const historyEntries = Array.from(
       roomContainer.querySelectorAll("div.battle-log div.inner.message-log div.chat.battle-history")
     ) as HTMLElement[];
 

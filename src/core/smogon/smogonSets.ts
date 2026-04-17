@@ -24,7 +24,7 @@ export class SmogonSets {
 
     const sets = generationSets.get(pokemon.name);
     return sets
-      ? sets.filter(set => areEquals(set.format, format))
+      ? sets.filter(set => !!set.format && areEquals(set.format, format))
       : [];
   }
 
@@ -40,7 +40,7 @@ export class SmogonSets {
       console.log(`Loaded ${gen} sets containing ${Object.keys(setsData).length} mons`);
 
       Object.keys(setsData).forEach(pokemon => {
-        var pokemonSets = getMap<PokemonSet>(setsData[pokemon]);
+        const pokemonSets = getMap<PokemonSet>(setsData[pokemon]);
         const supportedSets = Array.from(pokemonSets.keys())
           .map(setName => {
             const set = pokemonSets.get(setName);
@@ -53,7 +53,7 @@ export class SmogonSets {
             set.format = format;
             return set;
           })
-          .filter(set => !!set);
+          .filter((set): set is PokemonSet => !!set);
 
         genSetMap.set(pokemon, supportedSets);
       });

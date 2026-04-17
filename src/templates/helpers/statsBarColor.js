@@ -1,14 +1,14 @@
 module.exports = function (context) {
   function componentToHex(c) {
-    var hex = c.toString(16);
-    return hex.length == 1 ? "0" + hex : hex;
+    const hex = c.toString(16);
+    return hex.length === 1 ? "0" + hex : hex;
   }
   
   function colorToHex(color) {
     return "#" + componentToHex(color.r) + componentToHex(color.g) + componentToHex(color.b);
   }
 
-  lerp = function(a,b,u) {
+  const lerp = function(a, b, u) {
     return (1-u) * a + u * b;
   };
 
@@ -28,8 +28,8 @@ module.exports = function (context) {
 
   const low  = { r: 255, g:   0, b:   0 };
   const mid  = { r: 255, g: 254, b:   0 };
-  const high = { r: 002, g: 255, b:  42 };
-  const top  = { r: 002, g: 255, b: 255 };
+  const high = { r: 2, g: 255, b: 42 };
+  const top  = { r: 2, g: 255, b: 255 };
   
   const value = parseFloat(context);
   

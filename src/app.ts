@@ -1,5 +1,6 @@
 /// <reference types="chrome" />
 
+import { Pokemon } from "./core/pokemon/pokemonModels";
 import { PokemonDb } from "./core/pokemon/pokemonDb";
 import { SmogonStats } from "./core/smogon/smogonStats";
 import pokemonListTemplate from './templates/pokemonItem.hbs';
@@ -8,6 +9,16 @@ import { BattleInfo, ResponseMessage } from "./core/extensionModels";
 import { SmogonSets } from "./core/smogon/smogonSets";
 import { FormatHelper } from "./core/formatHelper";
 import { ImageService } from "./core/pokemon/imageService";
+
+type ResolvedPokemon = {
+  teamMemberName: string;
+  pokemon: Pokemon | undefined;
+};
+
+type FoundPokemon = {
+  teamMemberName: string;
+  pokemon: Pokemon;
+};
 
 let communicationDone = false;
 let showdownResponseTimeout: number | undefined;
@@ -79,16 +90,30 @@ async function displayTeamStats(battleInfo: BattleInfo) {
   const team = battleInfo.opponentTeam;
   const format = FormatHelper.getFormatFromKey(battleInfo.format);
   const teamMoveset = await Promise.all(team.map(async pkmName => await smogonStats.getMoveSet(pkmName, format)));
+  const resolvedPokemon: ResolvedPokemon[] = team
+    .map(teamMemberName => ({
+      teamMemberName,
+      pokemon: pokemonDb.getPokemon(teamMemberName.replace("-*", "")),
+    }));
+  const missingPokemon = resolvedPokemon
+    .filter((entry): entry is ResolvedPokemon & { pokemon: undefined } => !entry.pokemon)
+    .map(entry => entry.teamMemberName);
 
-  const teamUsageData = team.map(pkmName => pkmName.replace("-*", ""))
-                            .map(pkmName => pokemonDb.getPokemon(pkmName))
+  if (missingPokemon.length > 0) {
+    displayError(`It wasn't possible to load data for ${missingPokemon.join(", ")}. Please refresh the Pokemon Showdown page and try again.`);
+    return;
+  }
+
+  const teamUsageData = resolvedPokemon
+                            .filter((entry): entry is FoundPokemon => entry.pokemon !== undefined)
+                            .map(entry => entry.pokemon)
                             .map(pkm => ({
                               name: pkm.name, 
                               pokemon: pkm, 
                               gifUrl: ImageService.getGifUrl(pkm),
                               format: format,
                               formatLabel: FormatHelper.toString(format),
-                              usageData: teamMoveset.find(i => i?.name == pkm?.name),
+                              usageData: teamMoveset.find(i => i?.name === pkm.name),
                               sets: SmogonSets.get(pkm, format)
                                               .map(set => ({name: set.name, set: FormatHelper.getSmogonSet(pkm, set)}))
                             }));
@@ -118,7 +143,16 @@ function renderMainList(content: string) {
 }
 
 function initializeMaterializeComponents() {
-  const materialize = (window as Window & { M?: any }).M;
+  type MaterializeInitializer = {
+    init(elements: NodeListOf<Element>): void;
+  };
+
+  type MaterializeGlobal = {
+    Collapsible: MaterializeInitializer;
+    Tabs: MaterializeInitializer;
+  };
+
+  const materialize = (window as Window & { M?: MaterializeGlobal }).M;
   if (!materialize) {
     return;
   }

@@ -1,5 +1,5 @@
 import { Pokemon } from "./pokemon/pokemonModels";
-import { PokemonSet } from "./smogon/setsModels";
+import { Evs, PokemonSet } from "./smogon/setsModels";
 import { SmogonFormat } from "./smogon/usageModels";
 
 export class FormatHelper {
@@ -103,11 +103,11 @@ export class FormatHelper {
   }
 
   public static isValidGen(gen: string): boolean {
-    return this.Generations.some(g => g == gen.toLowerCase());
+    return this.Generations.some(g => g === gen.toLowerCase());
   }
 
   public static isValidTier(tier: string): boolean {
-    return this.Tiers.some(t => t == this.normalizeTier(tier));
+    return this.Tiers.some(t => t === this.normalizeTier(tier));
   }
 
   public static isValidFormat(format: string): boolean {
@@ -130,18 +130,19 @@ export class FormatHelper {
   }
 
   public static getSmogonSet(pokemon: Pokemon, set: PokemonSet): string {
-    var evCounter = 0;
-    var pkmSetText = "";
+    let evCounter = 0;
+    let pkmSetText = "";
     const evs = set.evs || {};
     pkmSetText = pokemon.name + (set.item ? " @ " + set.item : "") + "\n";
     pkmSetText += set.nature ? set.nature + " Nature" + "\n" : "";
     pkmSetText += set.ability ? "Ability: " + set.ability + "\n" : "";
     
-    var evsArray: string[] = [];
-    for (var stat in evs) {
-      if (evs[stat]) {
-        evsArray.push(evs[stat] + " " + this.getDisplayStatName(stat));
-        evCounter += evs[stat];
+    const evsArray: string[] = [];
+    for (const stat of Object.keys(evs) as Array<keyof Evs>) {
+      const statValue = evs[stat];
+      if (statValue) {
+        evsArray.push(statValue + " " + this.getDisplayStatName(stat));
+        evCounter += statValue;
         if (evCounter > 510) break;
       }
     }
@@ -151,8 +152,8 @@ export class FormatHelper {
       pkmSetText += "\n";
     }
     
-    for (var i = 0; i < 4; i++) {
-      var moveName = set.moves[i];
+    for (let i = 0; i < 4; i++) {
+      const moveName = set.moves[i];
       if (moveName !== "(No Move)") {
         pkmSetText += "- " + moveName + "\n";
       }
@@ -216,7 +217,7 @@ export class FormatHelper {
     return vgcTier || tier.toLowerCase();
   }
 
-  private static getDisplayStatName(stat: string) {
+  private static getDisplayStatName(stat: keyof Evs): string {
     switch (stat) {
       case 'hp': return 'HP';
       case 'at': return 'Atk';

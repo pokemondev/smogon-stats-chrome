@@ -20,7 +20,7 @@ export interface Pokemon {
     isAltForm?: boolean;
     weight: number;
     height: number;
-    usage?: any;
+    usage?: number | null;
 }
 
 export enum PokemonType {
@@ -58,7 +58,7 @@ export type EffectivenessItem = { type: PokemonType, effect: EffectivenessType }
 
 export interface TypeEffectiveness {
     name: string;
-    atk_effectives: any[][];
+    atk_effectives: unknown[][];
     def_effectives: EffectivenessMap;
     genfamily: string[];
     description: string;

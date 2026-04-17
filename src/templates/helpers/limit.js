@@ -4,16 +4,16 @@
 // usage: {{#limit items offset="3"}} : items 3 thru context.length
 // defaults are offset=0, limit=5
 module.exports = function (context, block) {
-  context = context ? context : {};
-  var ret = "",
-    offset = parseInt(block.hash.offset) || 0,
-    limit = parseInt(block.hash.limit) || 5,
-    i = (offset < context.length) ? offset : 0,
-    j = ((limit + offset) < context.length) ? (limit + offset) : context.length;
+  const items = context || [];
+  let ret = "";
+  const offset = parseInt(block.hash.offset, 10) || 0;
+  const limit = parseInt(block.hash.limit, 10) || 5;
+  let index = offset < items.length ? offset : 0;
+  const endIndex = (limit + offset) < items.length ? (limit + offset) : items.length;
 
-  for (i, j; i < j; i++) {
+  for (; index < endIndex; index++) {
     try {
-      ret += block.fn(context[i]);
+      ret += block.fn(items[index]);
     } catch (error) { }
   }
 
