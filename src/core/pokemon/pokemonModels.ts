@@ -40,6 +40,7 @@ export enum PokemonType {
     Poison   = "Poison",
     Psychic  = "Psychic",
     Rock     = "Rock",
+    Stellar  = "Stellar",
     Steel    = "Steel",
     Water    = "Water"
 }
