@@ -4,6 +4,7 @@ import { SmogonFormat } from "./smogon/usageModels";
 
 export class FormatHelper {
   private static readonly SupportedFormats: SmogonFormat[] = [
+    { generation: "gen9", tier: "championsvgc2026regma" },
     { generation: "gen9", tier: "vgc2026regf" },
     { generation: "gen9", tier: "vgc2026regi" },
     { generation: "gen9", tier: "ubers" },
@@ -16,6 +17,7 @@ export class FormatHelper {
     { generation: "gen9", tier: "nu" },
   ];
   private static readonly VgcRegulations: { [id: string]: string } = {
+    regma: "championsvgc2026regma",
     regf: "vgc2026regf",
     regi: "vgc2026regi"
   };
