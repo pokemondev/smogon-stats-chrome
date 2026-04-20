@@ -4,6 +4,14 @@
         <div class="card-content deep-purple-text">
           <span class="card-title valign-wrappe"><span class="message-icon" aria-hidden="true">i</span>Attention!</span>
           <p>{{errorMessage}}</p>
+          {{#if debugInfo}}
+          <div class="message-debug">
+            <strong>Debug</strong>
+            {{#each debugInfo}}
+              <div class="message-debug-line">{{this}}</div>
+            {{/each}}
+          </div>
+          {{/if}}
         </div>
         {{!-- <div class="card-action">
           <a href="#">This is a link</a>

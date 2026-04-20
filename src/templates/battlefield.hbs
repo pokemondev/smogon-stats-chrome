@@ -1,0 +1,48 @@
+<div class="battlefield-panel">
+    <ul class="tabs tabs-fixed-width">
+        <li class="tab"><a href="#battlefield-leads" class="waves-effect active">Leads</a></li>
+    </ul>
+
+    <div id="battlefield-leads" class="row tab-panel">
+        <div class="col s6 set-detail detail-section battlefield-column">
+            <strong class="detail-section-title">Player</strong>
+            {{#if playerLeads.length}}
+                {{#each playerLeads}}
+                    <div class="detail-line detail-line-split">
+                        <span class="detail-key detail-key-compact detail-key-with-icon">
+                            {{#if pokemonSpriteName}}
+                                <span class="usage-inline-icon-frame" aria-hidden="true">
+                                    <span class="pkm-sprite usage-inline-sprite-icon sprite-{{safePkmName pokemonSpriteName}}"></span>
+                                </span>
+                            {{/if}}
+                            <span>{{name}}</span>
+                        </span>
+                        <span class="detail-value detail-value-compact">#{{rank}} <strong>{{perc usagePercentage digits="1"}}%</strong></span>
+                    </div>
+                {{/each}}
+            {{else}}
+                <div class="tab-message">No lead data found for the player team in this format.</div>
+            {{/if}}
+        </div>
+        <div class="col s6 set-detail detail-section battlefield-column">
+            <strong class="detail-section-title">Opponent</strong>
+            {{#if opponentLeads.length}}
+                {{#each opponentLeads}}
+                    <div class="detail-line detail-line-split">
+                        <span class="detail-key detail-key-compact detail-key-with-icon">
+                            {{#if pokemonSpriteName}}
+                                <span class="usage-inline-icon-frame" aria-hidden="true">
+                                    <span class="pkm-sprite usage-inline-sprite-icon sprite-{{safePkmName pokemonSpriteName}}"></span>
+                                </span>
+                            {{/if}}
+                            <span>{{name}}</span>
+                        </span>
+                        <span class="detail-value detail-value-compact">#{{rank}} <strong>{{perc usagePercentage digits="1"}}%</strong></span>
+                    </div>
+                {{/each}}
+            {{else}}
+                <div class="tab-message">No lead data found for the opponent team in this format.</div>
+            {{/if}}
+        </div>
+    </div>
+</div>

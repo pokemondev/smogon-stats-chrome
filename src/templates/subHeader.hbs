@@ -1,0 +1,21 @@
+<div class="mode-layout">
+    <div class="mode-header">
+        <div class="mode-header-meta">
+            <span class="mode-header-title">Format:</span>
+            <span class="summary-chip summary-chip-format" title="{{formatLabel}}">{{formatLabel}}</span>
+        </div>
+        <div class="mode-switcher" role="tablist" aria-label="Battle data mode">
+            <span class="mode-header-title">Mode:</span>
+            {{#each modeOptions}}
+                <button
+                    type="button"
+                    class="mode-switcher-option{{#if isActive}} is-active{{/if}}"
+                    data-mode="{{mode}}"
+                    role="tab"
+                    aria-selected="{{#if isActive}}true{{else}}false{{/if}}"
+                >{{label}}</button>
+            {{/each}}
+        </div>
+    </div>
+    <div class="mode-content">{{{content}}}</div>
+</div>
