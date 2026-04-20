@@ -16,34 +16,50 @@ export class ShowdownExtensions {
   }
 
   public static getOpponentsTeam() {
+    const debugInfo: string[] = [];
+    
     const currentBattleRoomId = ShowdownExtensions.getCurrentBattleRoomId();
     if (!currentBattleRoomId) {
-      return ResponseMessageFactory.createForError("Couldn't find an active battle. Please open a battle tab in Pokemon Showdown first and try again.\n(Doesn't support random battles yet)");
+      debugInfo.push(`roomId=${currentBattleRoomId || "(missing)"}`);
+      return ResponseMessageFactory.createForError("Couldn't find an active battle. Please open a battle tab in Pokemon Showdown first and try again.\n(Doesn't support random battles yet)", debugInfo);
     }
 
     const format = ShowdownExtensions.getFormatFromRoomId(currentBattleRoomId);
     if (!format) {
-      return ResponseMessageFactory.createForError("Couldn't determine the battle format from the active Showdown room.");
+      debugInfo.push(`format=${format || "(missing)"}`);
+      return ResponseMessageFactory.createForError("Couldn't determine the battle format from the active Showdown room.", debugInfo);
     }
 
     const roomContainer = document.getElementById(`room-${currentBattleRoomId}`);
     if (!roomContainer) {
-      return ResponseMessageFactory.createForError("Couldn't locate the active battle room in Pokemon Showdown. Please refresh the page and try again.");
+      return ResponseMessageFactory.createForError("Couldn't locate the active battle room in Pokemon Showdown. Please refresh the page and try again.", debugInfo);
     }
 
-    const opponentName = ShowdownExtensions.getOpponentName(roomContainer);
-    if (!opponentName) {
-      return ResponseMessageFactory.createForError("Couldn't identify the opponent in the active battle. Please refresh the page and try again.");
-    }
+    const participantNames = ShowdownExtensions.getParticipantNames();
+    const playerName = participantNames[0];
+    const opponentName = participantNames[1];
 
-    const opponentTeam = ShowdownExtensions.getOpponentTeam(roomContainer, opponentName);
+    if (!playerName)
+      return ResponseMessageFactory.createForError("Couldn't identify the player in the active battle. Please refresh the page and try again.", debugInfo);
+    
+    if (!opponentName)
+      return ResponseMessageFactory.createForError("Couldn't identify the opponent in the active battle. Please refresh the page and try again.", debugInfo);
+
+    const opponentTeam = ShowdownExtensions.getParticipantTeam(roomContainer, opponentName);
     if (!opponentTeam || opponentTeam.length === 0) {
-      return ResponseMessageFactory.createForError("Couldn't read the opponent team from the active battle log. Please refresh the page and try again.\n(Doesn't support random battles yet)");
+      debugInfo.push(`opponentTeamSize=${opponentTeam ? opponentTeam.length : 0}`);
+      return ResponseMessageFactory.createForError("Couldn't read the opponent team from the active battle log. Please refresh the page and try again.\n(Doesn't support random battles yet)", debugInfo);
     }
 
-    console.log("Room:", currentBattleRoomId);
-    console.log("Team:", opponentTeam);
-    return ResponseMessageFactory.createFor(new BattleInfo(format, opponentTeam));
+    const playerTeam = ShowdownExtensions.getParticipantTeam(roomContainer, playerName);
+    if (!playerTeam || playerTeam.length === 0) {
+      debugInfo.push(`playerTeamSize=${playerTeam ? playerTeam.length : 0}`);
+      return ResponseMessageFactory.createForError("Couldn't read the player team from the active battle log. Please refresh the page and try again.\n(Doesn't support random battles yet)", debugInfo);
+    }
+
+    console.log("[Smogon Stats] Room:", currentBattleRoomId);
+    console.log("[Smogon Stats] Teams:", { playerTeam, opponentTeam, debugInfo });
+    return ResponseMessageFactory.createFor(new BattleInfo(format, opponentTeam, playerTeam), debugInfo);
   }
 
   public static executeOperation(operation: string): unknown {
@@ -68,20 +84,57 @@ export class ShowdownExtensions {
       : undefined;
   }
 
-  private static getOpponentName(roomContainer: HTMLElement): string | undefined {
-    const rightBar = roomContainer.querySelector("div.battle div.rightbar") as HTMLElement;
-    const name = ShowdownExtensions.normalizeText(rightBar?.textContent);
-    return name || undefined;
+  private static getParticipantNames(): string[] {
+    const roomTabParticipantsText = ShowdownExtensions.getActiveRoomTabParticipantsText();
+    const namesFromTab = ShowdownExtensions.getParticipantNamesFromRoomTab(roomTabParticipantsText);
+    return namesFromTab
   }
 
-  private static getOpponentTeam(roomContainer: HTMLElement, opponentName: string): string[] | undefined {
+  private static getActiveRoomTabParticipantsText(): string | undefined {
+    const activeRoomTabSpan = document.querySelector("div.tabbar.maintabbar a.roomtab.button.cur span") as HTMLSpanElement;
+    return ShowdownExtensions.normalizeText(activeRoomTabSpan?.textContent);
+  }
+
+  private static getParticipantNamesFromRoomTab(roomTabText: string | undefined): string[] {
+    if (!roomTabText) {
+      return [];
+    }
+
+    const versusIndex = roomTabText.toLowerCase().indexOf(" vs. ");
+    if (versusIndex < 0) {
+      return [];
+    }
+
+    const leftSegment = roomTabText.slice(0, versusIndex).trim();
+    const rightSegment = roomTabText.slice(versusIndex + 5).trim();
+    return [
+      ShowdownExtensions.getTrailingToken(leftSegment) ?? "",
+      ShowdownExtensions.getLeadingToken(rightSegment) ?? ""
+    ];
+  }
+
+  private static getTrailingToken(text: string): string | undefined {
+    const parts = text.split(/\s+/).filter(part => !!part);
+    return parts.length > 0
+      ? parts[parts.length - 1].replace(/[✕×xX]+$/, "")
+      : undefined;
+  }
+
+  private static getLeadingToken(text: string): string | undefined {
+    const parts = text.split(/\s+/).filter(part => !!part);
+    return parts.length > 0
+      ? parts[0].replace(/^[✕×xX]+/, "")
+      : undefined;
+  }
+
+  private static getParticipantTeam(roomContainer: HTMLElement, participantName: string): string[] | undefined {
     const historyEntries = Array.from(
       roomContainer.querySelectorAll("div.battle-log div.inner.message-log div.chat.battle-history")
     ) as HTMLElement[];
 
     for (const historyEntry of historyEntries) {
       const lines = ShowdownExtensions.getTextLines(historyEntry);
-      const nameLineIndex = lines.findIndex(line => line.indexOf(opponentName) >= 0);
+      const nameLineIndex = lines.findIndex(line => line.indexOf(participantName) >= 0);
       if (nameLineIndex < 0) {
         continue;
       }
