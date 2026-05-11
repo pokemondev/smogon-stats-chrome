@@ -1,6 +1,6 @@
 /// <reference types="chrome" />
 
-import { AppMessage, BattleInfo, ResponseMessageFactory } from "./core/extensionModels";
+import { AppMessage, BattleInfo, BattleTeamMember, ResponseMessageFactory } from "./core/extensionModels";
 
 export class ShowdownExtensions {
   
@@ -127,7 +127,7 @@ export class ShowdownExtensions {
       : undefined;
   }
 
-  private static getParticipantTeam(roomContainer: HTMLElement, participantName: string): string[] | undefined {
+  private static getParticipantTeam(roomContainer: HTMLElement, participantName: string): BattleTeamMember[] | undefined {
     const historyEntries = Array.from(
       roomContainer.querySelectorAll("div.battle-log div.inner.message-log div.chat.battle-history")
     ) as HTMLElement[];
@@ -175,7 +175,7 @@ export class ShowdownExtensions {
     return line.split("/").filter(part => part.trim().length > 0).length > 1;
   }
 
-  private static parseTeamLine(teamLine: string | undefined): string[] {
+  private static parseTeamLine(teamLine: string | undefined): BattleTeamMember[] {
     if (!teamLine) {
       return [];
     }
@@ -183,7 +183,8 @@ export class ShowdownExtensions {
     return teamLine
       .split("/")
       .map(part => part.trim())
-      .filter(part => part.length > 0);
+      .filter(part => part.length > 0)
+      .map(name => ({ name }));
   }
 
   private static normalizeText(text: string | null | undefined): string {

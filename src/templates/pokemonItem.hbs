@@ -5,6 +5,51 @@
             <div class="pokemon-summary-main">
                 <span class="pkm-sprite sprite-{{safePkmName name}}" aria-hidden="true"></span>
                 <span class="pokemon-summary-name">{{name}}</span>
+                {{#if formControl}}
+                <div class="pokemon-form-control">
+                    {{#if formControl.isToggle}}
+                    <label class="pokemon-form-toggle-field" for="{{formControl.elementId}}">
+                        <div class="pokemon-form-toggle-indicator">
+                            <input
+                                id="{{formControl.elementId}}"
+                                class="pokemon-form-toggle"
+                                type="checkbox"
+                                data-team-index="{{teamIndex}}"
+                                data-base-name="{{baseName}}"
+                                data-form-name="{{formControl.toggleTargetName}}"
+                                {{#if formControl.toggleChecked}}checked{{/if}} />
+                            <div class="pokemon-form-indicator" aria-hidden="true">
+                                {{#if formControl.isMegaActive}}
+                                <span class="pkm-sprite pokemon-form-stone-icon sprite-{{spriteName formControl.indicatorIconItemName}}"></span>
+                                {{else}}
+                                <span class="pokemon-form-checkbox-icon"></span>
+                                {{/if}}
+                            </div>
+                        </div>
+                        <span class="pokemon-form-toggle-label">{{formControl.toggleLabel}}</span>
+                    </label>
+                    {{/if}}
+                    {{#if formControl.isSelect}}
+                    <label class="pokemon-form-select-field" for="{{formControl.elementId}}">                        
+                        <div class="pokemon-form-indicator" aria-hidden="true">
+                            {{#if formControl.isMegaActive}}
+                            <span class="pkm-sprite pokemon-form-stone-icon sprite-{{spriteName formControl.indicatorIconItemName}}"></span>
+                            {{else}}
+                            <span class="pokemon-form-checkbox-icon"></span>
+                            {{/if}}
+                        </div>
+                        <select
+                            id="{{formControl.elementId}}"
+                            class="browser-default pokemon-form-select"
+                            data-team-index="{{teamIndex}}">
+                            {{#each formControl.options}}
+                            <option value="{{name}}" {{#if isActive}}selected{{/if}}>{{label}}</option>
+                            {{/each}}
+                        </select>
+                    </label>
+                    {{/if}}
+                </div>
+                {{/if}}
             </div>
             <div class="pokemon-summary-meta">
                 <span class="summary-chip summary-chip-rank">Usage rank: #{{usageData.usage}}</span>
