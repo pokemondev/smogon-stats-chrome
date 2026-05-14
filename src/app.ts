@@ -17,10 +17,13 @@ import {
   ResolvedPokemon,
   SubHeaderModeOption,
   TeamBuildResult,
+  TeamViewItem,
+  TeamViewItemFormControl,
+  TeamViewItemVariant,
   UsageEntryWithTypeIcon,
   ViewMode,
 } from "./core/appModels";
-import { BattleInfo, ResponseMessage } from "./core/extensionModels";
+import { BattleInfo, BattleTeamMember, ResponseMessage } from "./core/extensionModels";
 import { SmogonSets } from "./core/smogon/smogonSets";
 import { FormatHelper } from "./core/formatHelper";
 import { ImageService } from "./core/pokemon/imageService";
@@ -145,41 +148,29 @@ async function displayBattleInfo(battleInfo: BattleInfo) {
 }
 
 async function buildTeamViewItems(
-  team: string[],
+  team: BattleTeamMember[],
   format: SmogonFormat,
   pokemonDb: PokemonDb,
   movedex: Movedex,
   smogonStats: SmogonStats,
 ): Promise<TeamBuildResult> {
-  const teamMovesets = await Promise.all(team.map(async pkmName => await smogonStats.getMoveSet(pkmName, format)));
   const resolvedPokemon: ResolvedPokemon[] = team
-    .map(teamMemberName => ({
-      teamMemberName,
-      pokemon: pokemonDb.getPokemon(teamMemberName.replace("-*", "")),
+    .map((teamMember, teamIndex) => ({
+      teamIndex,
+      teamMember,
+      pokemon: pokemonDb.getPokemon(teamMember.name.replace("-*", "")),
     }));
   const missingPokemon = resolvedPokemon
     .filter((entry): entry is ResolvedPokemon & { pokemon: undefined } => !entry.pokemon)
-    .map(entry => entry.teamMemberName);
+    .map(entry => entry.teamMember.name);
   const foundPokemon = resolvedPokemon
     .filter((entry): entry is FoundPokemon => entry.pokemon !== undefined)
     .map(entry => entry.pokemon);
-  const teamViewItems = foundPokemon.map(pkm => {
-    const usageData = decorateMoveSetUsage(
-      teamMovesets.find(moveset => moveset?.name === pkm.name),
-      pokemonDb,
-      movedex,
-    );
-
-    return {
-      name: pkm.name,
-      pokemon: pkm,
-      gifUrl: ImageService.getGifUrl(pkm),
-      format: format,
-      usageData: usageData,
-      sets: SmogonSets.get(pkm, format)
-        .map(set => ({ name: set.name || pkm.name, set: FormatHelper.getSmogonSet(pkm, set) })),
-    };
-  });
+  const teamViewItems = await Promise.all(
+    resolvedPokemon
+      .filter((entry): entry is FoundPokemon => entry.pokemon !== undefined)
+      .map(entry => buildTeamViewItem(entry, format, pokemonDb, movedex, smogonStats))
+  );
 
   return {
     missingPokemon,
@@ -228,6 +219,7 @@ function renderActiveMode() {
     content: modeContent,
   }));
   initializeModeSwitcher();
+  initializePokemonFormSwitchers();
   initializeMaterializeComponents();
 }
 
@@ -252,6 +244,66 @@ function initializeModeSwitcher() {
       renderActiveMode();
     });
   });
+}
+
+function initializePokemonFormSwitchers() {
+  const stopHeaderToggle = (event: Event) => {
+    event.stopPropagation();
+  };
+
+  const toggleElements = document.querySelectorAll(".pokemon-form-toggle");
+  toggleElements.forEach(toggleElement => {
+    toggleElement.addEventListener("change", function() {
+      const toggle = toggleElement as HTMLInputElement;
+      const teamIndex = Number(toggle.getAttribute("data-team-index"));
+      const baseName = toggle.getAttribute("data-base-name");
+      const formName = toggle.getAttribute("data-form-name");
+      if (Number.isNaN(teamIndex) || !baseName || !formName) {
+        return;
+      }
+
+      setActivePokemonForm(teamIndex, toggle.checked ? formName : baseName);
+    });
+  });
+
+  const selectFieldElements = document.querySelectorAll(".pokemon-form-select-field");
+  selectFieldElements.forEach(selectFieldElement => {
+    ["pointerdown", "mousedown", "click", "touchstart"].forEach(eventName => {
+      selectFieldElement.addEventListener(eventName, stopHeaderToggle);
+    });
+  });
+
+  const selectElements = document.querySelectorAll(".pokemon-form-select");
+  selectElements.forEach(selectElement => {
+    ["pointerdown", "mousedown", "click", "touchstart"].forEach(eventName => {
+      selectElement.addEventListener(eventName, stopHeaderToggle);
+    });
+
+    selectElement.addEventListener("change", function() {
+      const select = selectElement as HTMLSelectElement;
+      const teamIndex = Number(select.getAttribute("data-team-index"));
+      if (Number.isNaN(teamIndex) || !select.value) {
+        return;
+      }
+
+      setActivePokemonForm(teamIndex, select.value);
+    });
+  });
+}
+
+function setActivePokemonForm(teamIndex: number, formName: string) {
+  if (!battleViewState || battleViewState.activeMode === "battlefield") {
+    return;
+  }
+
+  const activeTeam = battleViewState.teams[battleViewState.activeMode];
+  const currentTeamViewItem = activeTeam[teamIndex];
+  if (!currentTeamViewItem || currentTeamViewItem.activeFormName === formName || !currentTeamViewItem.variants[formName]) {
+    return;
+  }
+
+  activeTeam[teamIndex] = applyActiveForm(currentTeamViewItem, formName);
+  renderActiveMode();
 }
 
 function initializeMaterializeComponents() {
@@ -377,4 +429,163 @@ function getTypeIconSrc(typeName?: string | null): string | undefined {
 function shouldResolveNamedAsset(name: string): boolean {
   const normalizedName = (name || "").trim().toLowerCase();
   return normalizedName.length > 0 && !unresolvedSpriteNames.has(normalizedName);
+}
+
+async function buildTeamViewItem(
+  teamMember: FoundPokemon,
+  format: SmogonFormat,
+  pokemonDb: PokemonDb,
+  movedex: Movedex,
+  smogonStats: SmogonStats,
+): Promise<TeamViewItem> {
+  const basePokemon = teamMember.pokemon;
+  const megaFormNames = await smogonStats.getMegaFormNames(basePokemon.name, format);
+  const preferredFormName = await smogonStats.getPreferredFormName(basePokemon.name, format);
+  const variantNames = Array.from(new Set([basePokemon.name].concat(megaFormNames)));
+  const variants = (await Promise.all(variantNames.map(async formName => {
+    const pokemon = formName === basePokemon.name
+      ? basePokemon
+      : pokemonDb.getPokemon(formName);
+
+    if (!pokemon) {
+      return undefined;
+    }
+
+    const usageData = decorateMoveSetUsage(
+      await smogonStats.getMoveSet(formName, format),
+      pokemonDb,
+      movedex,
+    );
+
+    return createTeamViewItemVariant(pokemon, format, usageData);
+  })))
+    .filter((variant): variant is TeamViewItemVariant => !!variant);
+  const variantsByName = variants.reduce((record, variant) => {
+    record[variant.name] = variant;
+    return record;
+  }, {} as Record<string, TeamViewItemVariant>);
+  const activeFormName = variantsByName[preferredFormName]
+    ? preferredFormName
+    : basePokemon.name;
+  teamMember.teamMember.megaFormNames = megaFormNames;
+  teamMember.teamMember.selectedFormName = activeFormName;
+
+  return applyActiveForm({
+    ...variantsByName[activeFormName],
+    teamIndex: teamMember.teamIndex,
+    baseName: basePokemon.name,
+    format,
+    activeFormName,
+    variants: variantsByName,
+  }, activeFormName);
+}
+
+function createTeamViewItemVariant(
+  pokemon: Pokemon,
+  format: SmogonFormat,
+  usageData: DecoratedMoveSetUsage | undefined,
+): TeamViewItemVariant {
+  return {
+    name: pokemon.name,
+    pokemon,
+    gifUrl: ImageService.getGifUrl(pokemon),
+    usageData,
+    sets: SmogonSets.get(pokemon, format)
+      .map(set => ({ name: set.name || pokemon.name, set: FormatHelper.getSmogonSet(pokemon, set) })),
+  };
+}
+
+function applyActiveForm(teamViewItem: TeamViewItem, formName: string): TeamViewItem {
+  const activeVariant = teamViewItem.variants[formName]
+    || teamViewItem.variants[teamViewItem.baseName]
+    || Object.values(teamViewItem.variants)[0];
+
+  return {
+    ...teamViewItem,
+    ...activeVariant,
+    activeFormName: activeVariant.name,
+    formControl: buildFormControl(teamViewItem.teamIndex, teamViewItem.baseName, Object.values(teamViewItem.variants), activeVariant.name),
+  };
+}
+
+function buildFormControl(
+  teamIndex: number,
+  baseName: string,
+  variants: TeamViewItemVariant[],
+  activeFormName: string,
+): TeamViewItemFormControl | undefined {
+  const alternateVariants = variants.filter(variant => variant.name !== baseName);
+  if (alternateVariants.length === 0) {
+    return undefined;
+  }
+
+  const elementId = `pokemon-form-${teamIndex}`;
+  if (alternateVariants.length === 1) {
+    const megaVariant = alternateVariants[0];
+    const isMegaActive = activeFormName === megaVariant.name;
+
+    return {
+      elementId,
+      isToggle: true,
+      isSelect: false,
+      isMegaActive,
+      indicatorIconItemName: getMegaStoneItemName(megaVariant, baseName),
+      toggleTargetName: megaVariant.name,
+      toggleChecked: isMegaActive,
+      toggleLabel: getFormLabel(megaVariant.name, baseName),
+    };
+  }
+
+  const activeMegaVariant = alternateVariants.find(variant => variant.name === activeFormName);
+
+  return {
+    elementId,
+    isToggle: false,
+    isSelect: true,
+    isMegaActive: !!activeMegaVariant,
+    indicatorIconItemName: activeMegaVariant
+      ? getMegaStoneItemName(activeMegaVariant, baseName)
+      : undefined,
+    options: variants.map(variant => ({
+      name: variant.name,
+      label: getFormLabel(variant.name, baseName),
+      isActive: variant.name === activeFormName,
+    })),
+  };
+}
+
+function getFormLabel(formName: string, baseName: string): string {
+  if (formName === baseName) {
+    return "Normal";
+  }
+
+  const megaFormSuffix = formName.slice(baseName.length + 1);
+  if (megaFormSuffix.toLowerCase() === "mega") {
+    return "Mega Form";
+  }
+
+  return megaFormSuffix.replace(/-/g, " ");
+}
+
+function getMegaStoneItemName(variant: TeamViewItemVariant, baseName: string): string | undefined {
+  const primaryItemName = variant.usageData?.items[0]?.name;
+  if (primaryItemName) {
+    return primaryItemName;
+  }
+
+  const normalizedBaseName = baseName.replace(/[^A-Za-z0-9]/g, "");
+  const megaFormSuffix = variant.name.slice(baseName.length + 1).toLowerCase();
+  if (megaFormSuffix === "mega-x") {
+    return `${normalizedBaseName}ite X`;
+  }
+
+  if (megaFormSuffix === "mega-y") {
+    return `${normalizedBaseName}ite Y`;
+  }
+
+  if (megaFormSuffix === "mega-z") {
+    return `${normalizedBaseName}ite Z`;
+  }
+
+  return `${normalizedBaseName}ite`;
 }

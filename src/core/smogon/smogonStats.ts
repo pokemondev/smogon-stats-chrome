@@ -10,9 +10,19 @@ interface UsageStatsFile {
 
 export class SmogonStats {
 
+  private static readonly MegaFormPattern = /-Mega(?:-[XYZ])?$/i;
+
   private usages: Map<string, Map<string, PokemonUsage>> = new Map;
   private leads: Map<string, Map<string, PokemonUsage>> = new Map;
   private database: Map<string, unknown> = new Map;
+
+  public static isMegaFormName(name: string): boolean {
+    return this.MegaFormPattern.test((name || "").trim());
+  }
+
+  public static getBaseNameForMegaForm(name: string): string {
+    return (name || "").trim().replace(this.MegaFormPattern, "");
+  }
 
   public async getMoveSets(format?: SmogonFormat, filter?: (pkm: MoveSetUsage) => boolean): Promise<MoveSetUsage[]> {
     const sets = await this.getMovesetData(format);
@@ -79,6 +89,30 @@ export class SmogonStats {
     return usages.get(pokemon);
   }
 
+  public async getMegaFormNames(pokemon: string, format?: SmogonFormat): Promise<string[]> {
+    const usages = await this.getUsages(format);
+    return this.getMegaFormNamesFromUsages(pokemon, usages);
+  }
+
+  public async getPreferredFormName(pokemon: string, format?: SmogonFormat): Promise<string> {
+    const usages = await this.getUsages(format);
+    const candidateNames = [pokemon].concat(this.getMegaFormNamesFromUsages(pokemon, usages));
+    const rankedCandidates = candidateNames
+      .map(name => ({ name, usage: usages.get(name) }))
+      .filter((candidate): candidate is { name: string; usage: PokemonUsage } => !!candidate.usage);
+
+    if (rankedCandidates.length === 0) {
+      return pokemon;
+    }
+
+    rankedCandidates.sort((left, right) =>
+      right.usage.usagePercentage - left.usage.usagePercentage
+      || left.usage.rank - right.usage.rank
+    );
+
+    return rankedCandidates[0].name;
+  }
+
   // privates
   private async getMovesetData(format?: SmogonFormat): Promise<MoveSetUsage[]> {
     return await this.getData<MoveSetUsage[]>("moveset", format);
@@ -102,5 +136,18 @@ export class SmogonStats {
     
     this.database.set(dataKey, data);
     return data;
+  }
+
+  private getMegaFormNamesFromUsages(pokemon: string, usages: Map<string, PokemonUsage>): string[] {
+    const normalizedPokemonName = (pokemon || "").trim().toLowerCase();
+
+    return Array.from(usages.values())
+      .filter(usage => SmogonStats.isMegaFormName(usage.name))
+      .filter(usage => SmogonStats.getBaseNameForMegaForm(usage.name).toLowerCase() === normalizedPokemonName)
+      .sort((left, right) =>
+        right.usagePercentage - left.usagePercentage
+        || left.rank - right.rank
+      )
+      .map(usage => usage.name);
   }
 } 

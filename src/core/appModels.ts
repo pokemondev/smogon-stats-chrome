@@ -1,3 +1,4 @@
+import { BattleTeamMember } from "./extensionModels";
 import { Pokemon } from "./pokemon/pokemonModels";
 import { ChecksAndCountersUsageData, MoveSetUsage, PokemonUsage, SmogonFormat, UsageData } from "./smogon/usageModels";
 
@@ -6,12 +7,14 @@ export type ViewMode = "battlefield" | "player" | "opponent";
 export type TeamMode = Exclude<ViewMode, "battlefield">;
 
 export type ResolvedPokemon = {
-  teamMemberName: string;
+  teamIndex: number;
+  teamMember: BattleTeamMember;
   pokemon: Pokemon | undefined;
 };
 
 export type FoundPokemon = {
-  teamMemberName: string;
+  teamIndex: number;
+  teamMember: BattleTeamMember;
   pokemon: Pokemon;
 };
 
@@ -33,13 +36,39 @@ export type DecoratedMoveSetUsage = MoveSetUsage & {
   checksAndCounters: ChecksAndCountersEntryWithSprite[];
 };
 
-export type TeamViewItem = {
+export type TeamViewItemVariant = {
   name: string;
   pokemon: Pokemon;
   gifUrl: string;
-  format: SmogonFormat;
   usageData: DecoratedMoveSetUsage | undefined;
   sets: Array<{ name: string; set: string }>;
+};
+
+export type TeamViewItemFormOption = {
+  name: string;
+  label: string;
+  isActive: boolean;
+};
+
+export type TeamViewItemFormControl = {
+  elementId: string;
+  isToggle: boolean;
+  isSelect: boolean;
+  isMegaActive: boolean;
+  indicatorIconItemName?: string;
+  toggleTargetName?: string;
+  toggleChecked?: boolean;
+  toggleLabel?: string;
+  options?: TeamViewItemFormOption[];
+};
+
+export type TeamViewItem = TeamViewItemVariant & {
+  teamIndex: number;
+  baseName: string;
+  format: SmogonFormat;
+  activeFormName: string;
+  variants: Record<string, TeamViewItemVariant>;
+  formControl?: TeamViewItemFormControl;
 };
 
 export type TeamBuildResult = {

@@ -10,13 +10,24 @@ export interface ResponseMessage<T> {
   debugInfo?: string[]
 }
 
+export type BattleTeamMember = {
+  name: string;
+  megaFormNames?: string[];
+  selectedFormName?: string;
+};
+
 export class BattleInfo {
   constructor(
     public format: string,
-    public opponentTeam: string[],
-    public playerTeam: string[] = [],
+    opponentTeam: Array<string | BattleTeamMember>,
+    playerTeam: Array<string | BattleTeamMember> = [],
   ) {
+    this.opponentTeam = this.normalizeTeam(opponentTeam);
+    this.playerTeam = this.normalizeTeam(playerTeam);
   }
+
+  public opponentTeam: BattleTeamMember[];
+  public playerTeam: BattleTeamMember[];
 
   public isValidTeam(): boolean {
     return this.hasOpponentTeam() || this.hasPlayerTeam();
@@ -32,6 +43,13 @@ export class BattleInfo {
 
   public hasBothTeams(): boolean {
     return this.hasOpponentTeam() && this.hasPlayerTeam();
+  }
+
+  private normalizeTeam(team: Array<string | BattleTeamMember>): BattleTeamMember[] {
+    return (team || []).map(member => typeof member === "string"
+      ? { name: member }
+      : member
+    );
   }
 }
 

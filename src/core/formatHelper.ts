@@ -11,10 +11,10 @@ export class FormatHelper {
     { generation: "gen9", tier: "ou" },
     { generation: "gen9", tier: "uu" },
     { generation: "gen9", tier: "ru" },
+    { generation: "gen9", tier: "nu" },
     { generation: "gen8", tier: "ou" },
     { generation: "gen8", tier: "uu" },
     { generation: "gen8", tier: "vgc2021" },
-    { generation: "gen9", tier: "nu" },
   ];
   private static readonly VgcRegulations: { [id: string]: string } = {
     regma: "championsvgc2026regma",
